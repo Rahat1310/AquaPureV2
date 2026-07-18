@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
 // Run:  npx playwright test tests/auth.spec.ts
 // ──────────────────────────────────────────────────────────────
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 
 test.describe("Customer Auth Flow", () => {
   test("customer login page loads with h1", async ({ page }) => {

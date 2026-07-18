@@ -29,7 +29,7 @@ const footerColumns = [
   },
   {
     title: "Products",
-    links: ["Residential", "Commercial", "Industrial", "Accessories", "Mother & Child"],
+    links: ["Home & Family", "Business & Industry", "Industrial", "Accessories", "Mother & Child"],
   },
   {
     title: "Support",

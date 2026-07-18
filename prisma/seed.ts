@@ -73,6 +73,18 @@ const imgs = (...urls: string[]) => JSON.stringify(urls);
 async function main() {
   console.log(" Seeding AquaPure database...\n");
 
+  // Clean up existing transaction/dependent data to allow re-seeding
+  console.log(" Cleaning up old transactional data...");
+  await prisma.auditLog.deleteMany({});
+  await prisma.serviceRequest.deleteMany({});
+  await prisma.quoteRequest.deleteMany({});
+  await prisma.review.deleteMany({});
+  await prisma.orderItem.deleteMany({});
+  await prisma.order.deleteMany({});
+  await prisma.address.deleteMany({});
+  await prisma.productVariant.deleteMany({});
+  console.log(" Old transactional data cleaned.");
+
   // ──────────────────────────────────────────────────────────
   // USERS
   // ──────────────────────────────────────────────────────────
@@ -165,7 +177,7 @@ async function main() {
     children?: Array<{ name: string; slug: string; order?: number }>;
   }> = [
       {
-        name: "Residential",
+        name: "Home & Family",
         slug: "residential",
         order: 1,
         children: [
@@ -178,7 +190,7 @@ async function main() {
         ],
       },
       {
-        name: "Commercial",
+        name: "Business & Industry",
         slug: "commercial",
         order: 2,
         children: [
@@ -234,7 +246,10 @@ async function main() {
   for (const root of catDefs) {
     const rootCat = await prisma.category.upsert({
       where: { slug: root.slug },
-      update: {},
+      update: {
+        name: root.name,
+        displayOrder: root.order ?? 0,
+      },
       create: {
         name: root.name,
         slug: root.slug,
@@ -247,7 +262,11 @@ async function main() {
     for (const child of root.children ?? []) {
       const childCat = await prisma.category.upsert({
         where: { slug: child.slug },
-        update: {},
+        update: {
+          name: child.name,
+          displayOrder: child.order ?? 0,
+          parentId: rootCat.id,
+        },
         create: {
           name: child.name,
           slug: child.slug,

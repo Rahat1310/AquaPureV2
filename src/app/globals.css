@@ -81,3 +81,70 @@
   width: min(1180px, calc(100% - 32px));
   margin-inline: auto;
 }
+
+/* ─── Ambient background blob animations ────────────────────────────────────
+   GPU-only: only transform + opacity, never width/height/top/left.
+   will-change is set inline on the elements that use these keyframes.
+   Duration 30-45s keeps motion sub-perceptual on first load.
+   ─────────────────────────────────────────────────────────────────────────── */
+@keyframes blob-drift-a {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  33%       { transform: translate(28px, -20px) scale(1.04); }
+  66%       { transform: translate(-18px, 16px) scale(0.97); }
+}
+
+@keyframes blob-drift-b {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  40%       { transform: translate(-24px, 18px) scale(1.05); }
+  70%       { transform: translate(18px, -14px) scale(0.96); }
+}
+
+@keyframes blob-drift-c {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50%       { transform: translate(16px, 22px) scale(1.03); }
+}
+
+.ambient-blob-a {
+  animation: blob-drift-a 38s ease-in-out infinite;
+  will-change: transform;
+}
+.ambient-blob-b {
+  animation: blob-drift-b 45s ease-in-out infinite;
+  will-change: transform;
+}
+.ambient-blob-c {
+  animation: blob-drift-c 32s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ─── Route progress bar ────────────────────────────────────────────────── */
+.route-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 9999;
+  background: linear-gradient(90deg, #1b4fd1, #38bdf8, #1b4fd1);
+  background-size: 200% 100%;
+  animation: progress-shimmer 1.4s linear infinite;
+  transform-origin: left;
+}
+@keyframes progress-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Skeleton shimmer ──────────────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #e8f0fb 25%, #d0e2f8 50%, #e8f0fb 75%);
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  border-radius: 8px;
+}
+

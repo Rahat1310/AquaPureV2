@@ -13,6 +13,7 @@ import {
   Wrench,
 } from "lucide-react";
 
+import { AmbientBackground } from "@/components/shared/AmbientBackground";
 import { BrandLogoWall } from "@/components/shared/BrandLogoWall";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { SafeImage } from "@/components/shared/SafeImage";
@@ -73,7 +74,7 @@ const faqs = [
   {
     question: "Is installation really free?",
     answer:
-      "Yes. Every AquaPure residential and commercial purifier includes free professional installation by our certified technicians within our service areas.",
+      "Yes. Every AquaPure home & family and business & industry purifier includes free professional installation by our certified technicians within our service areas.",
   },
   {
     question: "How often should filters be replaced?",
@@ -111,6 +112,7 @@ export default async function HomePage() {
     <>
       {/* ─── Hero ─────────────────────────────────────────── */}
       <section className="water-grid relative overflow-x-clip border-b border-blue-100">
+        <AmbientBackground />
         <div className="pointer-events-none absolute -left-24 top-20 size-72 rounded-full border-[44px] border-white/35" />
         <div className="pointer-events-none absolute -right-20 -top-20 size-80 rounded-full bg-sky-300/15 blur-2xl" />
         <div className="section-shell relative grid min-h-[600px] items-center gap-12 py-16 lg:grid-cols-[1.04fr_.96fr] lg:py-20">
@@ -246,7 +248,7 @@ export default async function HomePage() {
           <div className="relative grid items-center gap-10 lg:grid-cols-[1.3fr_1fr]">
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-sky-300">
-                Commercial &amp; industrial
+                Business &amp; Industry
               </p>
               <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">
                 Water systems engineered for business.

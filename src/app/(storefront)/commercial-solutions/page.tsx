@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 import { CommercialSolutions } from "@/components/storefront/CommercialSolutions";
 
 export const metadata: Metadata = {
-  title: "Commercial & Industrial Water Solutions",
+  title: "Business & Industry Water Solutions",
   description:
     "Tailored water purification for hotels, hospitals, factories, restaurants, schools, apartments, and offices. Get a free consultation from AquaPure.",
   openGraph: {
-    title: "Commercial & Industrial Water Solutions | AquaPure",
+    title: "Business & Industry Water Solutions | AquaPure",
     description:
       "Tailored water purification for hotels, hospitals, factories, restaurants, schools, apartments, and offices.",
   },
@@ -19,7 +19,7 @@ export default function CommercialSolutionsPage() {
       <section className="water-grid border-b border-blue-100">
         <div className="section-shell max-w-2xl py-14 lg:py-16">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-primary">
-            Commercial &amp; industrial
+            Business &amp; Industry
           </p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.035em] text-slate-950 sm:text-4xl">
             Water solutions built for your business.

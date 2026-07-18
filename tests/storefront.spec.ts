@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
 // Run:  npx playwright test tests/storefront.spec.ts
 // ──────────────────────────────────────────────────────────────
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 
 test.describe("Homepage", () => {
   test("loads with hero heading and featured products", async ({ page }) => {
@@ -21,7 +21,7 @@ test.describe("Category listing", () => {
   test("residential category loads with filters and sorting", async ({ page }) => {
     await page.goto(`${BASE_URL}/category/residential`);
     await expect(
-      page.getByRole("heading", { level: 1, name: "Residential" }),
+      page.getByRole("heading", { level: 1, name: "Home & Family" }),
     ).toBeVisible();
     await expect(page.getByLabel("Sort products")).toBeVisible();
   });
