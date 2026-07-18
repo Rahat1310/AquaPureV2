@@ -21,6 +21,10 @@ import { Section } from "@/components/shared/Section";
 import { StatsBar } from "@/components/shared/StatsBar";
 import { TestimonialCard } from "@/components/shared/TestimonialCard";
 import { TrustBadgeRow } from "@/components/shared/TrustBadgeRow";
+import { FloatingDroplets } from "@/components/shared/FloatingDroplets";
+import { RippleCard } from "@/components/shared/RippleCard";
+import { WaveDivider } from "@/components/shared/WaveDivider";
+import { LightCaustics } from "@/components/shared/LightCaustics";
 import { BlogCard } from "@/components/storefront/BlogCard";
 import { FaqAccordion } from "@/components/storefront/FaqAccordion";
 import { SectionHeading } from "@/components/storefront/SectionHeading";
@@ -113,6 +117,7 @@ export default async function HomePage() {
       {/* ─── Hero ─────────────────────────────────────────── */}
       <section className="water-grid relative overflow-x-clip border-b border-blue-100">
         <AmbientBackground />
+        <FloatingDroplets />
         <div className="pointer-events-none absolute -left-24 top-20 size-72 rounded-full border-[44px] border-white/35" />
         <div className="pointer-events-none absolute -right-20 -top-20 size-80 rounded-full bg-sky-300/15 blur-2xl" />
         <div className="section-shell relative grid min-h-[600px] items-center gap-12 py-16 lg:grid-cols-[1.04fr_.96fr] lg:py-20">
@@ -151,7 +156,7 @@ export default async function HomePage() {
           </div>
 
           <div className="relative mx-auto w-full max-w-[560px]">
-            <div className="pointer-events-none absolute inset-8 rounded-full bg-gradient-to-br from-sky-200/75 to-blue-200/45 blur-2xl" />
+            <LightCaustics />
             <div className="relative overflow-hidden rounded-[32px] border border-white/80 bg-white/60 p-5 shadow-[0_30px_80px_rgba(27,79,209,0.16)] backdrop-blur sm:p-8">
               <div className="relative aspect-square">
                 <SafeImage
@@ -182,7 +187,8 @@ export default async function HomePage() {
       </Section>
 
       {/* ─── Categories ───────────────────────────────────── */}
-      <Section>
+      <Section className="relative overflow-hidden">
+        <FloatingDroplets />
         <SectionHeading
           eyebrow="Shop by need"
           title="Solutions for every space."
@@ -195,7 +201,7 @@ export default async function HomePage() {
             .map((category) => {
               const Icon = categoryIcons[category.slug] ?? Droplets;
               return (
-                <Link
+                <RippleCard
                   key={category.id}
                   href={categoryHref(category.slug)}
                   className="group relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-6 shadow-[0_16px_50px_rgba(25,65,130,0.07)] transition hover:-translate-y-1.5 hover:shadow-[0_24px_60px_rgba(25,65,130,0.14)]"
@@ -212,14 +218,16 @@ export default async function HomePage() {
                   <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-primary">
                     Browse <ArrowRight className="size-4 transition group-hover:translate-x-1" />
                   </span>
-                </Link>
+                </RippleCard>
               );
             })}
         </div>
       </Section>
 
+      <WaveDivider />
+
       {/* ─── Featured Products (from DB, isFeatured=true) ─── */}
-      <Section id="featured" muted>
+      <Section id="featured" muted noTopBorder>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeading
             align="left"

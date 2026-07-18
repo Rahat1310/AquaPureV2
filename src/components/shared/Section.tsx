@@ -8,6 +8,8 @@ interface SectionProps extends HTMLAttributes<HTMLElement> {
   /** When false, children render directly without the max-width shell. */
   shell?: boolean;
   shellClassName?: string;
+  /** Disable the top border, useful when placing a custom WaveDivider above it. */
+  noTopBorder?: boolean;
 }
 
 /**
@@ -20,13 +22,16 @@ export function Section({
   muted = false,
   shell = true,
   shellClassName,
+  noTopBorder = false,
   ...props
 }: SectionProps) {
   return (
     <section
       className={cn(
-        "py-16 md:py-24",
-        muted && "border-y border-blue-100 bg-[#f7faff]",
+        "py-16 md:py-24 relative",
+        muted && "bg-[#f7faff]",
+        muted && !noTopBorder && "border-t border-blue-100",
+        muted && "border-b border-blue-100",
         className,
       )}
       {...props}
