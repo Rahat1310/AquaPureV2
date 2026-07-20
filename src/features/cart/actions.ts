@@ -11,10 +11,8 @@ import {
   addToCartSchema,
   removeFromCartSchema,
   updateQuantitySchema,
-  type AddToCartInput,
   type CartActionResult,
   type RemoveFromCartInput,
-  type UpdateQuantityInput,
 } from "./schema";
 import type { GuestCartItem } from "./types";
 

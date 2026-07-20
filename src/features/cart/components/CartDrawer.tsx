@@ -6,7 +6,6 @@ import { ShoppingBag, X } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
-import { getCartSummary } from "@/features/cart/queries";
 import type { CartSummary } from "@/features/cart/types";
 import { useCart } from "@/features/cart/CartContext";
 import { CartItemRow } from "./CartItemRow";
@@ -42,7 +41,6 @@ export function CartDrawer({ initialSummary }: CartDrawerProps) {
         // Keep stale summary — non-fatal
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drawerOpen, totalQty]);
 
   // Close on Escape

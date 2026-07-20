@@ -12,7 +12,7 @@ import {
 import { auth } from "@/auth";
 import { cancelOrder } from "@/features/checkout/actions";
 import { getOrderById } from "@/features/checkout/queries";
-import { buttonVariants, Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 

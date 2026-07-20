@@ -198,7 +198,7 @@ export function HomeProductSearch({ className }: { className?: string }) {
           {results.length > 0 && (
             <ul className="max-h-[340px] overflow-y-auto py-1">
               {results.map((hit) => (
-                <li key={hit.id} role="option">
+                <li key={hit.id} role="option" aria-selected={false}>
                   <Link
                     href={`/product/${hit.slug}`}
                     className="flex items-center gap-3 px-3 py-2.5 transition hover:bg-secondary"

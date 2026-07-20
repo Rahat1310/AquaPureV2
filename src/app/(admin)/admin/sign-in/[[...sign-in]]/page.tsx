@@ -1,5 +1,6 @@
 import { SignIn } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Admin Sign In — AquaPure",
@@ -30,9 +31,9 @@ export default function AdminSignInPage() {
       />
       <p className="mt-6 text-center text-sm text-slate-500">
         Customer?{" "}
-        <a href="/sign-in" className="font-semibold text-primary hover:underline">
+        <Link href="/sign-in" className="font-semibold text-primary hover:underline">
           Customer sign in →
-        </a>
+        </Link>
       </p>
     </div>
   );
