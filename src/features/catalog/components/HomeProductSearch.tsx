@@ -133,7 +133,7 @@ export function HomeProductSearch({ className }: { className?: string }) {
           id="home-product-search"
           type="search"
           role="combobox"
-          aria-expanded={showPanel}
+          aria-expanded={Boolean(showPanel)}
           aria-controls={showPanel ? LISTBOX_ID : undefined}
           aria-autocomplete="list"
           autoComplete="off"
