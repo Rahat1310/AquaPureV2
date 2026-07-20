@@ -17,28 +17,37 @@ export function AmbientBackground() {
     >
       {/* Primary blob — top-left, large soft blue */}
       <div
-        className="ambient-blob-a absolute -left-32 -top-24 size-[520px] rounded-full opacity-40"
+        className="ambient-blob-a absolute -left-32 -top-24 size-[520px] rounded-full opacity-55"
         style={{
           background:
-            "radial-gradient(circle, rgba(56,189,248,0.28) 0%, rgba(27,79,209,0.14) 45%, transparent 72%)",
+            "radial-gradient(circle, rgba(56,189,248,0.38) 0%, rgba(27,79,209,0.18) 45%, transparent 72%)",
         }}
       />
 
       {/* Secondary blob — top-right, mid-blue */}
       <div
-        className="ambient-blob-b absolute -right-24 -top-16 size-[440px] rounded-full opacity-35"
+        className="ambient-blob-b absolute -right-24 -top-16 size-[440px] rounded-full opacity-50"
         style={{
           background:
-            "radial-gradient(circle, rgba(27,79,209,0.20) 0%, rgba(56,189,248,0.10) 50%, transparent 72%)",
+            "radial-gradient(circle, rgba(27,79,209,0.28) 0%, rgba(56,189,248,0.14) 50%, transparent 72%)",
         }}
       />
 
       {/* Accent blob — bottom-center, sky tint */}
       <div
-        className="ambient-blob-c absolute -bottom-20 left-1/2 size-[360px] -translate-x-1/2 rounded-full opacity-30"
+        className="ambient-blob-c absolute -bottom-20 left-1/2 size-[360px] -translate-x-1/2 rounded-full opacity-45"
         style={{
           background:
-            "radial-gradient(circle, rgba(125,211,252,0.22) 0%, transparent 65%)",
+            "radial-gradient(circle, rgba(125,211,252,0.32) 0%, transparent 65%)",
+        }}
+      />
+
+      {/* Extra mid-left glow for depth */}
+      <div
+        className="absolute left-[20%] top-[40%] size-[280px] rounded-full opacity-40"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(147,197,253,0.35) 0%, transparent 70%)",
         }}
       />
     </div>

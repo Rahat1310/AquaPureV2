@@ -5,8 +5,8 @@
  * Configured in package.json under "prisma.seed"
  *
  * Covers:
- *  - 1 SUPER_ADMIN + 1 ADMIN + 1 SERVICE_MANAGER + 3 CUSTOMERS
- *  - Full category tree (5 roots → 31 leaves)
+ *  - 1 SUPER_ADMIN + 1 ADMIN + 1 SERVICE_MANAGER + 1 SUPPORT + 3 CUSTOMERS
+ *  - Simplified category tree (Residence / Commercial / Accessories / Mother & Child)
  *  - 12 Products with BDT pricing, realistic specs
  *  - 3 ProductVariants (commercial RO capacity variants)
  *  - 2 Addresses per customer
@@ -88,11 +88,11 @@ async function main() {
   // ──────────────────────────────────────────────────────────
   // USERS
   // ──────────────────────────────────────────────────────────
-  const [superAdmin, admin, serviceManager, customer1, customer2, customer3] =
+  const [superAdmin, admin, serviceManager, support, customer1, customer2, customer3] =
     await Promise.all([
       prisma.user.upsert({
         where: { email: "superadmin@aquapure.com.bd" },
-        update: {},
+        update: { twoFactorEnabled: true },
         create: {
           name: "Rafiqul Islam",
           email: "superadmin@aquapure.com.bd",
@@ -100,11 +100,12 @@ async function main() {
           role: Role.SUPER_ADMIN,
           phone: "01711000001",
           isActive: true,
+          twoFactorEnabled: true,
         },
       }),
       prisma.user.upsert({
         where: { email: "admin@aquapure.com.bd" },
-        update: {},
+        update: { twoFactorEnabled: true },
         create: {
           name: "Nasrin Akter",
           email: "admin@aquapure.com.bd",
@@ -112,6 +113,7 @@ async function main() {
           role: Role.ADMIN,
           phone: "01722000002",
           isActive: true,
+          twoFactorEnabled: true,
         },
       }),
       prisma.user.upsert({
@@ -124,6 +126,20 @@ async function main() {
           role: Role.SERVICE_MANAGER,
           phone: "01733000003",
           isActive: true,
+          twoFactorEnabled: false,
+        },
+      }),
+      prisma.user.upsert({
+        where: { email: "support@aquapure.com.bd" },
+        update: {},
+        create: {
+          name: "Farhan Rahman",
+          email: "support@aquapure.com.bd",
+          passwordHash: await hashPassword("Support@123456"),
+          role: Role.SUPPORT,
+          phone: "01744000004",
+          isActive: true,
+          twoFactorEnabled: false,
         },
       }),
       prisma.user.upsert({
@@ -167,7 +183,8 @@ async function main() {
   console.log("✅ Users seeded");
 
   // ──────────────────────────────────────────────────────────
-  // CATEGORIES  (5 roots → 31 leaves)
+  // CATEGORIES  (client-approved simplified tree)
+  // Keep root slugs: residential, commercial, accessories, mother-and-child
   // ──────────────────────────────────────────────────────────
 
   const catDefs: Array<{
@@ -177,29 +194,27 @@ async function main() {
     children?: Array<{ name: string; slug: string; order?: number }>;
   }> = [
       {
-        name: "Home & Family",
+        name: "Residence",
         slug: "residential",
         order: 1,
         children: [
-          { name: "RO UV", slug: "ro-uv", order: 1 },
-          { name: "RO UV UF", slug: "ro-uv-uf", order: 2 },
-          { name: "Under Sink", slug: "under-sink", order: 3 },
-          { name: "Table Top", slug: "table-top", order: 4 },
-          { name: "Hot & Cold", slug: "hot-and-cold", order: 5 },
-          { name: "Wall Mounted", slug: "wall-mounted", order: 6 },
+          { name: "RO Purifier", slug: "ro-purifier", order: 1 },
+          { name: "UV", slug: "uv", order: 2 },
+          { name: "RO + UV + UF", slug: "ro-uv-uf", order: 3 },
+          { name: "Water Dispenser", slug: "water-dispenser", order: 4 },
+          { name: "Economy Purifier", slug: "economy-purifier", order: 5 },
+          { name: "Hot & Cold Purifier", slug: "hot-and-cold", order: 6 },
+          { name: "Iron Remover / Housing", slug: "iron-removal", order: 7 },
         ],
       },
       {
-        name: "Business & Industry",
+        name: "Commercial",
         slug: "commercial",
         order: 2,
         children: [
           { name: "Commercial RO", slug: "commercial-ro", order: 1 },
           { name: "Industrial RO", slug: "industrial-ro", order: 2 },
-          { name: "Waste Water Treatment", slug: "waste-water-treatment", order: 3 },
-          { name: "Water Softener", slug: "water-softener", order: 4 },
-          { name: "Iron Removal", slug: "iron-removal", order: 5 },
-          { name: "Water Dispenser", slug: "water-dispenser", order: 6 },
+          { name: "Water Dispenser", slug: "commercial-water-dispenser", order: 3 },
         ],
       },
       {
@@ -207,19 +222,17 @@ async function main() {
         slug: "accessories",
         order: 3,
         children: [
-          { name: "PP Filter", slug: "pp-filter", order: 1 },
-          { name: "Carbon Filter", slug: "carbon-filter", order: 2 },
-          { name: "Post Carbon", slug: "post-carbon", order: 3 },
-          { name: "Membrane", slug: "membrane", order: 4 },
-          { name: "T33", slug: "t33", order: 5 },
-          { name: "Mineral Cartridge", slug: "mineral-cartridge", order: 6 },
-          { name: "Alkaline Cartridge", slug: "alkaline-cartridge", order: 7 },
+          { name: "P.P Filter", slug: "pp-filter", order: 1 },
+          { name: "Box / Net / Post Carbon", slug: "post-carbon", order: 2 },
+          { name: "Membrane", slug: "membrane", order: 3 },
+          { name: "Post Carbon T33", slug: "t33", order: 4 },
+          { name: "Alkaline", slug: "alkaline-cartridge", order: 5 },
+          { name: "Mineral", slug: "mineral-cartridge", order: 6 },
+          { name: "Motor / Adaptor", slug: "adapter", order: 7 },
           { name: "UV Lamp", slug: "uv-lamp", order: 8 },
-          { name: "Motor", slug: "motor", order: 9 },
-          { name: "Adapter", slug: "adapter", order: 10 },
-          { name: "Tap", slug: "tap", order: 11 },
-          { name: "Fittings", slug: "fittings", order: 12 },
-          { name: "TDS Meter", slug: "tds-meter", order: 13 },
+          { name: "Tap", slug: "tap", order: 9 },
+          { name: "Fittings", slug: "fittings", order: 10 },
+          { name: "Meter", slug: "tds-meter", order: 11 },
         ],
       },
       {
@@ -227,17 +240,11 @@ async function main() {
         slug: "mother-and-child",
         order: 4,
         children: [
-          { name: "Baby Water Purifier", slug: "baby-water-purifier", order: 1 },
-          { name: "Bottle Sterilizer", slug: "bottle-sterilizer", order: 2 },
-          { name: "Formalin Removal", slug: "formalin-removal", order: 3 },
-          { name: "Shower Filter", slug: "shower-filter", order: 4 },
+          { name: "RO UV Alkaline", slug: "ro-uv-alkaline", order: 1 },
+          { name: "Formalin Removal", slug: "formalin-removal", order: 2 },
+          { name: "Shower Filter", slug: "shower-filter", order: 3 },
+          { name: "Air Purifier", slug: "air-purifier", order: 4 },
         ],
-      },
-      {
-        name: "Air Purifier",
-        slug: "air-purifier",
-        order: 5,
-        children: [],
       },
     ];
 
@@ -279,7 +286,7 @@ async function main() {
     }
   }
 
-  console.log("✅ Categories seeded (5 roots, 31 leaves)");
+  console.log("✅ Categories seeded (client-approved simplified tree)");
 
   // ──────────────────────────────────────────────────────────
   // PRODUCTS  (12 products)
@@ -295,7 +302,7 @@ async function main() {
       price: 12500,
       compareAtPrice: 15000,
       stock: 45,
-      categorySlug: "table-top",
+      categorySlug: "ro-purifier",
       brand: "AquaPure",
       isFeatured: true,
       isBestSeller: true,
@@ -322,7 +329,7 @@ async function main() {
       price: 22000,
       compareAtPrice: 27500,
       stock: 28,
-      categorySlug: "wall-mounted",
+      categorySlug: "hot-and-cold",
       brand: "AquaPure",
       isFeatured: true,
       isBestSeller: false,
@@ -348,7 +355,7 @@ async function main() {
       price: 9800,
       compareAtPrice: 12000,
       stock: 60,
-      categorySlug: "under-sink",
+      categorySlug: "economy-purifier",
       brand: "AquaPure",
       isFeatured: false,
       isBestSeller: true,
@@ -399,7 +406,7 @@ async function main() {
       price: 7500,
       compareAtPrice: 9000,
       stock: 120,
-      categorySlug: "ro-uv",
+      categorySlug: "uv",
       brand: "AquaPure",
       isFeatured: false,
       isBestSeller: true,
@@ -552,7 +559,7 @@ async function main() {
       price: 6500,
       compareAtPrice: 8000,
       stock: 22,
-      categorySlug: "baby-water-purifier",
+      categorySlug: "ro-uv-alkaline",
       brand: "AquaPure",
       isFeatured: true,
       isBestSeller: false,
@@ -575,7 +582,13 @@ async function main() {
   for (const p of productDefs) {
     const product = await prisma.product.upsert({
       where: { slug: p.slug },
-      update: {},
+      update: {
+        name: p.name,
+        categoryId: categoryMap[p.categorySlug],
+        brand: p.brand,
+        isFeatured: p.isFeatured,
+        isBestSeller: p.isBestSeller,
+      },
       create: {
         name: p.name,
         slug: p.slug,
@@ -787,6 +800,7 @@ async function main() {
         requirement:
           "Require 200 GPD commercial RO system for laboratory use. Water must meet Class 3 purity standard. Urgent requirement.",
         status: QuoteStatus.NEW,
+        assignedToId: support.id,
       },
     ],
   });
@@ -799,6 +813,7 @@ async function main() {
   await prisma.serviceRequest.createMany({
     data: [
       {
+        userId: customer1.id,
         type: ServiceType.INSTALLATION,
         customerName: "Rahela Begum",
         phone: "01812000101",
@@ -810,15 +825,26 @@ async function main() {
         technicianId: serviceManager.id,
       },
       {
+        userId: customer1.id,
         type: ServiceType.AMC,
-        customerName: "Rafiq Mia",
-        phone: "01611987654",
-        address: "Flat 5A, Janata Tower, Tejgaon, Dhaka",
+        customerName: "Rahela Begum",
+        phone: "01812000101",
+        address: "House 12, Road 5, Block C, Mirpur DOHS, Dhaka 1216",
         productModel: "AquaPure WM-100 Wall Mounted RO UV",
         scheduleDate: new Date("2024-12-01T11:00:00Z"),
         notes: "Annual maintenance — filter replacement due. 3rd filter change.",
         status: "OPEN",
         technicianId: serviceManager.id,
+      },
+      {
+        userId: customer2.id,
+        type: ServiceType.WARRANTY_REGISTRATION,
+        customerName: "Tanvir Ahmed",
+        phone: "01812000202",
+        address: "House 45, Road 11, Banani, Dhaka",
+        productModel: "AquaPure RO-75 Table Top Purifier",
+        status: "IN_PROGRESS",
+        technicianId: null,
       },
     ],
   });
@@ -869,12 +895,14 @@ async function main() {
 
   console.log("\n🎉 Database seeded successfully!");
   console.log("─────────────────────────────────────────");
-  console.log("Admin:   superadmin@aquapure.com.bd  / SuperAdmin@123");
-  console.log("Admin:   admin@aquapure.com.bd       / Admin@123456");
-  console.log("Staff:   service@aquapure.com.bd     / Service@123456");
-  console.log("Customer: rahela@example.com          / Customer@123");
-  console.log("Customer: tanvir@example.com          / Customer@123");
-  console.log("Customer: sadia@example.com           / Customer@123");
+  console.log("Auth is Clerk (Option A). Seed users link when those emails sign in.");
+  console.log("Invite staff in Clerk Dashboard with these emails (roles hardcoded):");
+  console.log("  SUPER_ADMIN:      superadmin@aquapure.com.bd");
+  console.log("  ADMIN:            admin@aquapure.com.bd");
+  console.log("  SERVICE_MANAGER:  service@aquapure.com.bd");
+  console.log("  SUPPORT:          support@aquapure.com.bd");
+  console.log("Customers: public sign-up at /sign-up (any email → CUSTOMER).");
+  console.log("Demo customer rows still seeded: rahela@ / tanvir@ / sadia@ example.com");
 }
 
 main()

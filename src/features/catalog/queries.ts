@@ -20,6 +20,7 @@ import {
   type ProductDetail,
   type ProductListItem,
   type ProductListResult,
+  type ProductSearchHit,
 } from "./types";
 
 const ACTIVE = "ACTIVE";
@@ -429,3 +430,68 @@ export async function getAllProductSlugs(): Promise<string[]> {
   });
   return rows.map((r) => r.slug);
 }
+
+// ─── Homepage / storefront product search ─────────────────────────────────────
+
+export type { ProductSearchHit };
+
+const SEARCH_MIN_CHARS = 2;
+const SEARCH_DEFAULT_LIMIT = 8;
+
+/**
+ * Lightweight product search for typeahead.
+ * - ACTIVE only
+ * - Matches name / sku / brand / slug (case-insensitive)
+ * - Caps result count; no review joins
+ */
+export async function searchProducts(
+  rawQuery: string,
+  limit = SEARCH_DEFAULT_LIMIT,
+): Promise<ProductSearchHit[]> {
+  const q = rawQuery.trim().replace(/\s+/g, " ");
+  if (q.length < SEARCH_MIN_CHARS) return [];
+
+  const take = Math.min(Math.max(limit, 1), 12);
+
+  const rows = await prisma.product.findMany({
+    where: {
+      status: ACTIVE,
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { sku: { contains: q, mode: "insensitive" } },
+        { brand: { contains: q, mode: "insensitive" } },
+        { slug: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      sku: true,
+      price: true,
+      images: true,
+      brand: true,
+      isBestSeller: true,
+      category: { select: { name: true } },
+    },
+    orderBy: [
+      { isBestSeller: "desc" },
+      { isFeatured: "desc" },
+      { name: "asc" },
+    ],
+    take,
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    sku: row.sku,
+    price: toNumber(row.price),
+    image: parseImages(row.images)[0] ?? null,
+    brand: row.brand,
+    categoryName: row.category?.name ?? "",
+  }));
+}
+
+export { SEARCH_MIN_CHARS };

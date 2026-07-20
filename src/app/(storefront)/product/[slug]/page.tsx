@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { ChevronRight, ShieldCheck, Star, Truck, Wrench } from "lucide-react";
 
 import { ProductCard } from "@/components/shared/ProductCard";
-import { ProductGallery } from "@/components/storefront/ProductGallery";
-import { ProductPurchasePanel } from "@/components/storefront/ProductPurchasePanel";
-import { ProductTabs } from "@/components/storefront/ProductTabs";
+import { ProductGallery } from "@/features/catalog/components/ProductGallery";
+import { ProductPurchasePanel } from "@/features/catalog/components/ProductPurchasePanel";
+import { ProductTabs } from "@/features/catalog/components/ProductTabs";
 import { Badge } from "@/components/ui/badge";
 import {
   getProductBySlug,
@@ -140,6 +140,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           <div className="mt-6">
             <ProductPurchasePanel
+              productId={product.id}
               basePrice={product.price}
               stock={product.stock}
               variants={product.variants}

@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
+
 export default defineConfig({
   testDir: "./tests",
   timeout: 30_000,
@@ -10,7 +12,7 @@ export default defineConfig({
   reporter: "html",
 
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: BASE_URL,
     trace: "on-first-retry",
   },
 
@@ -24,7 +26,7 @@ export default defineConfig({
   // Start the dev server automatically before running tests
   webServer: {
     command: "npm run dev",
-    url: "http://localhost:3000",
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

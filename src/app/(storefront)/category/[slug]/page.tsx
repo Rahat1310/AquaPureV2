@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { ChevronRight, SlidersHorizontal } from "lucide-react";
 
 import { ProductCard } from "@/components/shared/ProductCard";
-import { CatalogToolbar } from "@/components/storefront/CatalogToolbar";
-import { CategoryFilters } from "@/components/storefront/CategoryFilters";
-import { Pagination } from "@/components/storefront/Pagination";
+import { CatalogToolbar } from "@/features/catalog/components/CatalogToolbar";
+import { CategoryFilters } from "@/features/catalog/components/CategoryFilters";
+import { Pagination } from "@/features/catalog/components/Pagination";
 import {
   getCatalogFacets,
   listProducts,

@@ -1,3 +1,13 @@
-import { handlers } from "@/auth";
+import { NextResponse } from "next/server";
 
-export const { GET, POST } = handlers;
+/** Auth.js removed — Clerk handles auth. */
+export function GET() {
+  return NextResponse.redirect(new URL("/sign-in", process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"));
+}
+
+export function POST() {
+  return NextResponse.json(
+    { error: "Auth.js disabled. Use Clerk at /sign-in." },
+    { status: 410 },
+  );
+}

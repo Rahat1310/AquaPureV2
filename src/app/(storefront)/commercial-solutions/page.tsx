@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 
-import { CommercialSolutions } from "@/components/storefront/CommercialSolutions";
+import { CommercialSolutions } from "@/features/commercial/components/CommercialSolutions";
 
 export const metadata: Metadata = {
-  title: "Business & Industry Water Solutions",
+  title: "Commercial Water Solutions",
   description:
-    "Tailored water purification for hotels, hospitals, factories, restaurants, schools, apartments, and offices. Get a free consultation from AquaPure.",
+    "Commercial and industrial RO systems for restaurants, clinics, offices, and factories. Request a quote from AquaPure.",
   openGraph: {
-    title: "Business & Industry Water Solutions | AquaPure",
+    title: "Commercial Water Solutions | AquaPure",
     description:
-      "Tailored water purification for hotels, hospitals, factories, restaurants, schools, apartments, and offices.",
+      "Commercial and industrial RO systems for restaurants, clinics, offices, and factories.",
   },
 };
 
@@ -19,13 +19,13 @@ export default function CommercialSolutionsPage() {
       <section className="water-grid border-b border-blue-100">
         <div className="section-shell max-w-2xl py-14 lg:py-16">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-primary">
-            Business &amp; Industry
+            Commercial
           </p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-[-0.035em] text-slate-950 sm:text-4xl">
-            Water solutions built for your business.
+            Water systems for your business.
           </h1>
           <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
-            Choose your industry to see recommended capacity, benefits, and to request a tailored consultation.
+            Tell us your industry and capacity need — we&apos;ll recommend the right RO system.
           </p>
         </div>
       </section>

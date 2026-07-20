@@ -1,139 +1,119 @@
-import NextAuth, { type NextAuthConfig } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
+import { auth as clerkAuth, currentUser } from "@clerk/nextjs/server";
+
 import { prisma } from "@/lib/prisma";
-import { Role } from "@/lib/rbac";
+import type { Role } from "@/lib/rbac";
+import { roleForEmail } from "@/lib/staff-roles";
 
-const STAFF_ROLES: Role[] = [
-  Role.SUPER_ADMIN,
-  Role.ADMIN,
-  Role.SERVICE_MANAGER,
-  Role.SUPPORT,
-];
-
-const credentialsSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
-
-export const authConfig: NextAuthConfig = {
-  adapter: PrismaAdapter(prisma),
-
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
-
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-
-  providers: [
-    // ── Customer login ────────────────────────────────────────
-    CredentialsProvider({
-      id: "customer-credentials",
-      name: "Customer Login",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        const parsed = credentialsSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const { email, password } = parsed.data;
-
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user || !user.passwordHash) return null;
-        if (!user.isActive) return null;
-
-        // Block staff from customer login path
-        if (STAFF_ROLES.includes(user.role as Role)) return null;
-
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return null;
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          role: user.role,
-        };
-      },
-    }),
-
-    // ── Staff login ───────────────────────────────────────────
-    CredentialsProvider({
-      id: "staff-credentials",
-      name: "Staff Login",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        const parsed = credentialsSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const { email, password } = parsed.data;
-
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user || !user.passwordHash) return null;
-        if (!user.isActive) return null;
-
-        // Block customers from staff login path
-        if (!STAFF_ROLES.includes(user.role as Role)) return null;
-
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return null;
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          role: user.role,
-        };
-      },
-    }),
-  ],
-
-  callbacks: {
-    async signIn({ user }) {
-      // Extra guard: block any inactive account regardless of provider
-      if (!user?.id) return false;
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { isActive: true },
-      });
-      return dbUser?.isActive ?? false;
-    },
-
-    async jwt({ token, user }) {
-      // On first sign-in `user` is populated; embed role into token
-      if (user) {
-        token.id = user.id;
-        token.role = (user as { role?: string }).role;
-        token.name = user.name;
-        token.email = user.email;
-      }
-      return token;
-    },
-
-    async session({ session, token }) {
-      // Copy token fields onto the session object
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        (session.user as { role?: string }).role = token.role as string;
-        session.user.name = token.name as string;
-        session.user.email = token.email as string;
-      }
-      return session;
-    },
-  },
+export type AppUser = {
+  id: string;
+  email: string | null;
+  name: string | null;
+  role: Role;
+  image: string | null;
 };
 
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+export type AppSession = {
+  user: AppUser;
+};
+
+type ClerkUserLike = NonNullable<Awaited<ReturnType<typeof currentUser>>>;
+
+function primaryEmail(user: ClerkUserLike): string | null {
+  const primary = user.emailAddresses.find(
+    (e) => e.id === user.primaryEmailAddressId,
+  );
+  return (
+    primary?.emailAddress ?? user.emailAddresses[0]?.emailAddress ?? null
+  );
+}
+
+/** Upsert Prisma user from Clerk. Staff roles from hardcoded email map. */
+export async function syncUserFromClerk(clerkUser: ClerkUserLike) {
+  const email = primaryEmail(clerkUser);
+  const role = roleForEmail(email);
+  const name =
+    [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
+    clerkUser.username ||
+    email;
+  const image = clerkUser.imageUrl || null;
+
+  const existingByClerk = await prisma.user.findUnique({
+    where: { clerkId: clerkUser.id },
+  });
+
+  if (existingByClerk) {
+    return prisma.user.update({
+      where: { id: existingByClerk.id },
+      data: {
+        email: email ?? existingByClerk.email,
+        name,
+        image,
+        role,
+        emailVerified: email ? new Date() : existingByClerk.emailVerified,
+      },
+    });
+  }
+
+  if (email) {
+    const existingByEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingByEmail) {
+      return prisma.user.update({
+        where: { id: existingByEmail.id },
+        data: {
+          clerkId: clerkUser.id,
+          name: name ?? existingByEmail.name,
+          image: image ?? existingByEmail.image,
+          role,
+          emailVerified: new Date(),
+        },
+      });
+    }
+  }
+
+  const created = await prisma.user.create({
+    data: {
+      clerkId: clerkUser.id,
+      email,
+      name,
+      image,
+      role,
+      emailVerified: email ? new Date() : null,
+      isActive: true,
+    },
+  });
+
+  try {
+    const { mergeGuestCart } = await import("@/features/cart/actions");
+    await mergeGuestCart(created.id);
+  } catch {
+    // ignore cart merge failures
+  }
+
+  return created;
+}
+
+/** Drop-in replacement for Auth.js auth(). */
+export async function auth(): Promise<AppSession | null> {
+  const { userId } = await clerkAuth();
+  if (!userId) return null;
+
+  const clerkUser = await currentUser();
+  if (!clerkUser) return null;
+
+  const dbUser = await syncUserFromClerk(clerkUser);
+  if (!dbUser.isActive) return null;
+
+  return {
+    user: {
+      id: dbUser.id,
+      email: dbUser.email,
+      name: dbUser.name,
+      role: dbUser.role as Role,
+      image: dbUser.image,
+    },
+  };
+}
+
+export async function signOut(_opts?: { redirectTo?: string }): Promise<void> {
+  void _opts;
+}

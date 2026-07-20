@@ -9,6 +9,9 @@ export const quoteRequestSchema = z.object({
     .max(20, "Phone number is too long."),
   email: z.string().email("Enter a valid email.").optional().or(z.literal("")),
   requirement: z.string().min(5, "Tell us a little about your requirement."),
+  capacityNeeded: z.string().max(100).optional().or(z.literal("")),
+  /** Honeypot — bots fill this, humans leave it empty */
+  _website: z.string().max(0, "Invalid submission.").optional().or(z.literal("")),
 });
 
 export type QuoteRequestInput = z.infer<typeof quoteRequestSchema>;

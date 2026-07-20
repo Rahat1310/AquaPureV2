@@ -17,6 +17,18 @@ export interface ProductListItem {
   createdAt: string;
 }
 
+/** Lightweight hit for homepage / typeahead search. */
+export interface ProductSearchHit {
+  id: string;
+  name: string;
+  slug: string;
+  sku: string;
+  price: number;
+  image: string | null;
+  brand: string | null;
+  categoryName: string;
+}
+
 export interface ProductDetail extends ProductListItem {
   description: string | null;
   images: string[];
