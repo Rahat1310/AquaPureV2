@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 
+import { NavigationLoader } from "@/components/shared/NavigationLoader";
+
 import "./globals.css";
 
 const inter = Inter({
@@ -34,6 +36,7 @@ export default function RootLayout({
     >
       <html lang="en">
         <body className={inter.variable} suppressHydrationWarning>
+          <NavigationLoader />
           {children}
         </body>
       </html>

@@ -49,13 +49,13 @@ const fallbackHeroSlides: HeroSlide[] = [
 
 export default async function HomePage() {
   const [featured, accessories] = await Promise.all([
-    getFeaturedProducts(4),
+    getFeaturedProducts(6),
     getFeaturedAccessories(4),
   ]);
 
   const heroSlides: HeroSlide[] =
     featured.length > 0
-      ? featured.slice(0, 4).map((product) => ({
+      ? featured.slice(0, 6).map((product) => ({
           image: product.image || "/product-placeholder.svg",
           alt: product.name,
           title: product.name,
@@ -97,10 +97,57 @@ export default async function HomePage() {
               <Droplets className="size-4 fill-sky-200" />
               Bangladesh&apos;s trusted water care partner
             </span>
-            <h1 className="mt-6 max-w-3xl text-4xl font-bold leading-[1.08] tracking-[-0.045em] text-slate-950 sm:text-5xl lg:text-[62px]">
-              Pure water for
-              <span className="block bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
-                every people
+            <h1 className="mt-6 max-w-3xl overflow-visible text-4xl font-bold leading-[1.15] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-[62px]">
+              <span className="block pb-1">Purity in every</span>
+              <span className="mt-1 inline-flex items-center gap-2 overflow-visible sm:gap-3">
+                <span className="inline-block overflow-visible bg-gradient-to-r from-primary via-sky-500 to-cyan-400 bg-clip-text py-1 pl-[0.08em] pr-[0.18em] italic text-transparent [-webkit-box-decoration-break:clone]">
+                  drop
+                </span>
+                <span
+                  className="relative inline-flex shrink-0 items-end self-center"
+                  aria-hidden="true"
+                >
+                  <span className="absolute inset-0 scale-150 rounded-full bg-sky-300/30 blur-2xl" />
+                  <svg
+                    viewBox="0 0 56 72"
+                    className="relative h-[0.9em] w-auto drop-shadow-[0_10px_22px_rgba(27,79,209,0.28)]"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <defs>
+                      <linearGradient
+                        id="hero-drop-fill"
+                        x1="10"
+                        y1="4"
+                        x2="48"
+                        y2="68"
+                        gradientUnits="userSpaceOnUse"
+                      >
+                        <stop stopColor="#38BDF8" />
+                        <stop offset="0.45" stopColor="#1B4FD1" />
+                        <stop offset="1" stopColor="#0EA5E9" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M28 3C28 3 6 28.5 6 46.2C6 58.4 15.4 68 28 68C40.6 68 50 58.4 50 46.2C50 28.5 28 3 28 3Z"
+                      fill="url(#hero-drop-fill)"
+                    />
+                    <path
+                      d="M18.5 48.5C21.8 55.2 30.2 57.8 38.5 52.2"
+                      stroke="#7DD3FC"
+                      strokeWidth="3.2"
+                      strokeLinecap="round"
+                    />
+                    <ellipse
+                      cx="21"
+                      cy="30"
+                      rx="5.5"
+                      ry="8"
+                      fill="white"
+                      fillOpacity="0.35"
+                    />
+                  </svg>
+                </span>
               </span>
             </h1>
             <p className="mt-6 max-w-xl text-base leading-8 text-slate-600 sm:text-lg">
@@ -133,35 +180,71 @@ export default async function HomePage() {
       </section>
 
       {/* Featured products */}
-      <Section id="featured" muted noTopBorder>
-        <FeaturedSectionHeader
-          eyebrow="Popular"
-          title="Featured products."
-          description="Ready-to-buy models for everyday water care."
-          href={categoryHref("residential")}
-          viewAllLabel="View all products"
+      <Section
+        id="featured"
+        muted
+        noTopBorder
+        className="overflow-hidden bg-gradient-to-b from-sky-100/80 via-[#eef5ff] to-indigo-50/70"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-24 top-10 size-72 rounded-full bg-sky-300/35 blur-3xl"
         />
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {featured.map((product) => (
-            <ProductCard key={product.id} {...toProductCardProps(product)} />
-          ))}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute right-[-4rem] top-1/3 size-80 rounded-full bg-blue-400/20 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute bottom-0 left-1/3 size-64 rounded-full bg-cyan-200/40 blur-3xl"
+        />
+        <div className="relative z-[1]">
+          <FeaturedSectionHeader
+            eyebrow="Popular"
+            title="Featured products."
+            description="Ready-to-buy models for everyday water care."
+            href={categoryHref("residential")}
+            viewAllLabel="View all products"
+          />
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {featured.map((product) => (
+              <ProductCard key={product.id} {...toProductCardProps(product)} />
+            ))}
+          </div>
         </div>
       </Section>
 
       {/* Featured accessories */}
       {accessories.length > 0 && (
-        <Section id="accessories">
-          <FeaturedSectionHeader
-            eyebrow="Essentials"
-            title="Featured accessories."
-            description="Filters, membranes, meters, and spare parts that keep systems running."
-            href={categoryHref("accessories")}
-            viewAllLabel="View all accessories"
+        <Section
+          id="accessories"
+          className="overflow-hidden border-y border-blue-100/80 bg-gradient-to-b from-blue-50 via-slate-50 to-sky-100/90"
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/4 top-0 size-72 rounded-full bg-primary/15 blur-3xl"
           />
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {accessories.map((product) => (
-              <ProductCard key={product.id} {...toProductCardProps(product)} />
-            ))}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-16 bottom-8 size-80 rounded-full bg-sky-300/30 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute bottom-1/4 left-[-3rem] size-56 rounded-full bg-indigo-200/35 blur-3xl"
+          />
+          <div className="relative z-[1]">
+            <FeaturedSectionHeader
+              eyebrow="Essentials"
+              title="Featured accessories."
+              description="Filters, membranes, meters, and spare parts that keep systems running."
+              href={categoryHref("accessories")}
+              viewAllLabel="View all accessories"
+            />
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+              {accessories.map((product) => (
+                <ProductCard key={product.id} {...toProductCardProps(product)} />
+              ))}
+            </div>
           </div>
         </Section>
       )}

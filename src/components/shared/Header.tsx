@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { SignOutButton, useAuth } from "@clerk/nextjs";
 import {
   ChevronDown,
@@ -30,6 +31,7 @@ type NavLeaf = { label: string; href: string; featured?: boolean };
 type NavGroup = {
   label: string;
   href: string;
+  featured?: boolean;
   children?: NavLeaf[];
 };
 
@@ -48,11 +50,11 @@ const navItems: NavItem[] = [
     label: "Family",
     href: "/category/residential",
     groups: [
+      { label: "Economy Purifier", href: "/category/economy-purifier", featured: true },
       { label: "RO Purifier", href: "/category/ro-purifier" },
       { label: "UV", href: "/category/uv" },
       { label: "RO + UV + UF", href: "/category/ro-uv-uf" },
       { label: "Water Dispenser", href: "/category/water-dispenser" },
-      { label: "Economy Purifier", href: "/category/economy-purifier" },
       { label: "Hot & Cold Purifier", href: "/category/hot-and-cold" },
       { label: "Iron Remover / Housing", href: "/category/iron-removal" },
     ],
@@ -205,67 +207,20 @@ const flyoutVariants: Variants = {
 };
 
 function BrandLogo() {
-  const reduceMotion = useReducedMotion();
-
   return (
     <Link
       href="/"
-      className="group flex shrink-0 items-center gap-2.5"
+      className="group shrink-0"
       aria-label="Padma Mineral Water home"
     >
-      <span className="relative grid size-11 place-items-center overflow-hidden rounded-2xl bg-primary text-white shadow-[0_10px_22px_rgba(27,79,209,0.25)]">
-        <span className="absolute -right-2 -top-2 size-7 rounded-full bg-sky-300/50" />
-        <motion.span
-          className="relative z-[1] flex h-7 w-6 items-start justify-center"
-          animate={
-            reduceMotion
-              ? undefined
-              : {
-                  y: [0, 2, 0],
-                }
-          }
-          transition={
-            reduceMotion
-              ? undefined
-              : {
-                  duration: 2.4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }
-          }
-          style={{ willChange: "transform" }}
-        >
-          <svg viewBox="0 0 32 38" className="h-7 w-6" aria-hidden="true">
-            <path
-              d="M16 1.5S2.5 15.2 2.5 25.1C2.5 32.2 8.5 37 16 37s13.5-4.8 13.5-11.9C29.5 15.2 16 1.5 16 1.5Z"
-              fill="currentColor"
-            />
-            <path
-              d="M9.8 27.4c2.3 3.2 7 4.2 11.4 1.5"
-              stroke="#75D6FF"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-            />
-          </svg>
-        </motion.span>
-        {!reduceMotion && (
-          <motion.span
-            className="absolute bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-sky-300/80"
-            animate={{ opacity: [0, 0.9, 0], y: [0, 6], scale: [0.6, 1, 0.4] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
-            style={{ willChange: "transform, opacity" }}
-            aria-hidden
-          />
-        )}
-      </span>
-      <span>
-        <span className="block text-xl font-extrabold leading-5 tracking-[-0.04em] text-primary">
-          PMW
-        </span>
-        <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-          Safe water. Safe life.
-        </span>
-      </span>
+      <Image
+        src="/logo.png"
+        alt="Padma Mineral Water"
+        width={200}
+        height={88}
+        priority
+        className="h-14 w-auto object-contain transition group-hover:opacity-90 sm:h-16"
+      />
     </Link>
   );
 }
@@ -326,11 +281,21 @@ function CascadingDropdown({
                 <Link
                   href={group.href}
                   role="menuitem"
-                  className={rowClass(false)}
+                  className={cn(
+                    rowClass(false),
+                    group.featured && "bg-sky-50/80 text-slate-900",
+                  )}
                   onMouseEnter={() => setFlyout(null)}
                   onClick={onClose}
                 >
-                  <span>{group.label}</span>
+                  <span className="flex items-center gap-2">
+                    {group.label}
+                    {group.featured && (
+                      <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                        Featured
+                      </span>
+                    )}
+                  </span>
                 </Link>
               </li>
             );
@@ -709,9 +674,19 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
                                   <Link
                                     href={group.href}
                                     onClick={() => setMobileOpen(false)}
-                                    className="block bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-[#123a9b] hover:text-white"
+                                    className={cn(
+                                      "flex items-center justify-between gap-2 bg-slate-50 px-3 py-2.5 text-sm font-medium hover:bg-[#123a9b] hover:text-white",
+                                      group.featured
+                                        ? "bg-sky-50/80 text-slate-800"
+                                        : "text-slate-700",
+                                    )}
                                   >
-                                    {group.label}
+                                    <span>{group.label}</span>
+                                    {group.featured && (
+                                      <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                                        Featured
+                                      </span>
+                                    )}
                                   </Link>
                                 )}
                               </li>

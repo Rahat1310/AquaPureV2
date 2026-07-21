@@ -1,6 +1,7 @@
 "use client";
 
 import { Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -27,18 +28,16 @@ export function Footer() {
         <div>
           <Link
             href="/"
-            className="inline-flex items-center gap-3"
+            className="inline-flex rounded-xl bg-white px-2.5 py-2 shadow-sm"
             aria-label="Padma Mineral Water home"
           >
-            <span className="grid size-11 place-items-center rounded-2xl bg-white text-sm font-black tracking-tight text-primary">
-              PMW
-            </span>
-            <span>
-              <span className="block text-xl font-extrabold tracking-tight">PMW</span>
-              <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-blue-200">
-                Safe water. Safe life.
-              </span>
-            </span>
+            <Image
+              src="/logo.png"
+              alt="Padma Mineral Water"
+              width={180}
+              height={80}
+              className="h-14 w-auto object-contain"
+            />
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-7 text-blue-100/80">
             Padma Mineral Water delivers clean purification for homes and businesses
