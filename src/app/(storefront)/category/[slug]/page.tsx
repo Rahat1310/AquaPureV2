@@ -33,7 +33,7 @@ export async function generateMetadata({
   const title = `${scope.current.name} Water Solutions`;
   const description =
     scope.current.description ??
-    `Shop AquaPure ${scope.current.name.toLowerCase()} water purifiers and solutions with free installation and genuine warranty.`;
+    `Shop PMW ${scope.current.name.toLowerCase()} water purifiers and solutions with free installation and genuine warranty.`;
 
   return {
     title,

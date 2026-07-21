@@ -5,9 +5,9 @@ import { CommercialSolutions } from "@/features/commercial/components/Commercial
 export const metadata: Metadata = {
   title: "Commercial Water Solutions",
   description:
-    "Commercial and industrial RO systems for restaurants, clinics, offices, and factories. Request a quote from AquaPure.",
+    "Commercial and industrial RO systems for restaurants, clinics, offices, and factories. Request a quote from Padma Mineral Water.",
   openGraph: {
-    title: "Commercial Water Solutions | AquaPure",
+    title: "Commercial Water Solutions | Padma Mineral Water",
     description:
       "Commercial and industrial RO systems for restaurants, clinics, offices, and factories.",
   },

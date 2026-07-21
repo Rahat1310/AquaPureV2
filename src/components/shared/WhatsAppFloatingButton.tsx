@@ -16,11 +16,11 @@ interface WhatsAppFloatingButtonProps {
 
 const contextMessages: Record<WhatsAppContext, string> = {
   "product-inquiry":
-    "Hello AquaPure, I would like to know more about your water purifier products.",
+    "Hello Padma Mineral Water, I would like to know more about your water purifier products.",
   "commercial-quote":
-    "Hello AquaPure, I would like a commercial water purification quote for my business.",
+    "Hello Padma Mineral Water, I would like a commercial water purification quote for my business.",
   "service-request":
-    "Hello AquaPure, I need help with installation, maintenance, or a service request.",
+    "Hello Padma Mineral Water, I need help with installation, maintenance, or a service request.",
 };
 
 export function WhatsAppFloatingButton({
@@ -39,7 +39,7 @@ export function WhatsAppFloatingButton({
       href={href}
       target="_blank"
       rel="noreferrer"
-      aria-label="Chat with AquaPure on WhatsApp"
+      aria-label="Chat with Padma Mineral Water on WhatsApp"
       className={cn(
         "group fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-[#25D366] p-3.5 text-white shadow-[0_12px_34px_rgba(20,120,67,0.36)] transition duration-300 hover:-translate-y-1 hover:bg-[#1fbd5b] sm:bottom-7 sm:right-7",
         className,

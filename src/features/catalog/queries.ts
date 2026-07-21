@@ -393,6 +393,13 @@ export async function getProductsInCategory(
   return rows.map(toProductListItem);
 }
 
+/** Homepage accessories strip — same card grid as featured products. */
+export async function getFeaturedAccessories(
+  limit = 4,
+): Promise<ProductListItem[]> {
+  return getProductsInCategory("accessories", limit);
+}
+
 export interface TestimonialDTO {
   id: string;
   quote: string;

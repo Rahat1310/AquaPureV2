@@ -8,7 +8,7 @@ import {
   Banknote,
 } from "lucide-react";
 
-import { auth } from "@/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import {
   Card,
   CardContent,
@@ -41,7 +41,7 @@ function orderBadgeVariant(
 }
 
 export default async function AdminDashboardPage() {
-  const session = await auth();
+  const session = await getAdminSession();
   const role = getSessionRole(
     session as { user?: { role?: string } | null } | null,
   );

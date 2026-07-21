@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Sign In — AquaPure",
+  title: "Sign In — Padma Mineral Water",
 };
 
 export default function SignInPage() {
@@ -12,10 +12,11 @@ export default function SignInPage() {
       <div className="flex flex-col items-center gap-6">
         <div className="text-center">
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
-            Sign in to AquaPure
+            Sign in to PMW
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Customers can create an account. Staff use the admin invite link.
+            Welcome to Padma Mineral Water. Customers can create an account.
+            Staff use the admin invite link.
           </p>
         </div>
         <SignIn

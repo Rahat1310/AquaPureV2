@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 
-import { auth } from "@/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { requireRole, Role } from "@/lib/rbac";
 
@@ -57,7 +57,7 @@ async function ensureUniqueSlug(base: string, excludeId?: string): Promise<strin
 // ─── Pricing / inventory / order status (existing) ────────────────────────────
 
 export async function updateProductPricing(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.PRODUCTS_WRITE]);
 
   const parsed = updatePriceSchema.safeParse(input);
@@ -95,7 +95,7 @@ export async function updateProductPricing(input: unknown): Promise<ActionResult
 }
 
 export async function updateProductInventory(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.PRODUCTS_STOCK]);
 
   const parsed = updateStockSchema.safeParse(input);
@@ -130,7 +130,7 @@ export async function updateProductInventory(input: unknown): Promise<ActionResu
 }
 
 export async function updateOrderStatus(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.ORDERS]);
 
   const parsed = updateOrderStatusSchema.safeParse(input);
@@ -169,7 +169,7 @@ export async function updateOrderStatus(input: unknown): Promise<ActionResult> {
 // ─── Products CRUD ────────────────────────────────────────────────────────────
 
 export async function createProduct(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.PRODUCTS_WRITE]);
 
   const parsed = createProductSchema.safeParse(input);
@@ -237,7 +237,7 @@ export async function createProduct(input: unknown): Promise<ActionResult> {
 }
 
 export async function updateProduct(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.PRODUCTS_WRITE]);
 
   const parsed = updateProductSchema.safeParse(input);
@@ -338,7 +338,7 @@ export async function updateProduct(input: unknown): Promise<ActionResult> {
 }
 
 export async function deleteProduct(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.PRODUCTS_WRITE]);
 
   const id =
@@ -407,7 +407,7 @@ export async function deleteProduct(input: unknown): Promise<ActionResult> {
 }
 
 export async function bulkProductAction(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.PRODUCTS_WRITE]);
 
   const parsed = bulkProductActionSchema.safeParse(input);
@@ -481,7 +481,7 @@ export async function bulkProductAction(input: unknown): Promise<ActionResult> {
 // ─── Refunds ──────────────────────────────────────────────────────────────────
 
 export async function initiateRefund(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.ORDERS]);
 
   const parsed = initiateRefundSchema.safeParse(input);
@@ -541,7 +541,7 @@ export async function initiateRefund(input: unknown): Promise<ActionResult> {
 // ─── Service requests ─────────────────────────────────────────────────────────
 
 export async function updateServiceRequest(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.SERVICE_REQUESTS]);
 
   const parsed = updateServiceRequestSchema.safeParse(input);
@@ -603,7 +603,7 @@ export async function updateServiceRequest(input: unknown): Promise<ActionResult
 // ─── Users ────────────────────────────────────────────────────────────────────
 
 export async function updateUser(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.USERS]);
 
   const parsed = updateUserSchema.safeParse(input);
@@ -692,7 +692,7 @@ export async function updateUser(input: unknown): Promise<ActionResult> {
 // ─── Quotes ───────────────────────────────────────────────────────────────────
 
 export async function updateQuoteRequest(input: unknown): Promise<ActionResult> {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.QUOTES]);
 
   const parsed = updateQuoteRequestSchema.safeParse(input);
@@ -751,7 +751,7 @@ export async function updateQuoteRequest(input: unknown): Promise<ActionResult> 
 
 // ─── Session ──────────────────────────────────────────────────────────────────
 
-/** Prefer Clerk <SignOutButton>; kept for compatibility. */
 export async function adminSignOut(): Promise<void> {
-  void (await auth());
+  const { adminLogout } = await import("@/features/admin/login-actions");
+  await adminLogout();
 }

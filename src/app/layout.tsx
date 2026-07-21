@@ -12,11 +12,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "AquaPure | Pure Water, Better Living",
-    template: "%s | AquaPure",
+    default: "Padma Mineral Water | PMW — Safe Water, Safe Life",
+    template: "%s | Padma Mineral Water",
   },
   description:
-    "Premium water purification solutions for homes, businesses, and industries.",
+    "Padma Mineral Water (PMW) — safe water, safe life. Premium purification for homes, businesses, and industries across Bangladesh.",
 };
 
 export default function RootLayout({

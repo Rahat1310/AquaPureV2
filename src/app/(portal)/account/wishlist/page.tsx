@@ -11,7 +11,7 @@ import { removeFromWishlist } from "@/features/portal/actions";
 import { getWishlistByUser } from "@/features/portal/queries";
 
 export const metadata: Metadata = {
-  title: "Wishlist — AquaPure",
+  title: "Wishlist — Padma Mineral Water",
   description: "Products you’ve saved for later.",
 };
 

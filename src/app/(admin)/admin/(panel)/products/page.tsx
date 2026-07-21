@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { auth } from "@/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { ProductsTable } from "@/features/admin/components/ProductsTable";
 import { adminQuery } from "@/features/admin/guard";
 import { AdminPermission } from "@/features/admin/permissions";
@@ -22,7 +22,7 @@ export default async function AdminProductsPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
-  const session = await auth();
+  const session = await getAdminSession();
 
   const q = params.q?.trim() || undefined;
   const status = params.status?.trim() || undefined;

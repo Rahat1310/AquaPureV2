@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const description =
     product.description?.slice(0, 160) ??
-    `${product.name} — AquaPure water purifier with free installation and genuine warranty.`;
+    `${product.name} — water purifier from Padma Mineral Water with free installation and genuine warranty.`;
   const ogImage = product.image ? [{ url: product.image }] : undefined;
 
   return {

@@ -6,8 +6,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Contact Us — AquaPure",
-  description: "Talk to AquaPure about residence, commercial, or accessory water solutions.",
+  title: "Contact Us — Padma Mineral Water",
+  description:
+    "Talk to Padma Mineral Water about residence, commercial, or accessory water solutions.",
 };
 
 export default function ContactPage() {
@@ -44,12 +45,12 @@ export default function ContactPage() {
           <p className="mt-1 text-sm text-slate-600">Chat with our team</p>
         </a>
         <a
-          href="mailto:care@aquapure.com"
+          href="mailto:care@padmamineralwater.com"
           className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm transition hover:border-primary/30"
         >
           <Mail className="size-5 text-primary" />
           <p className="mt-3 text-sm font-bold text-slate-900">Email</p>
-          <p className="mt-1 text-sm text-slate-600">care@aquapure.com</p>
+          <p className="mt-1 text-sm text-slate-600">care@padmamineralwater.com</p>
         </a>
         <div className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
           <MapPin className="size-5 text-primary" />

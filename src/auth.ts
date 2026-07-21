@@ -2,7 +2,7 @@ import { auth as clerkAuth, currentUser } from "@clerk/nextjs/server";
 
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/lib/rbac";
-import { roleForEmail } from "@/lib/staff-roles";
+import { Role as R } from "@/lib/rbac";
 
 export type AppUser = {
   id: string;
@@ -27,10 +27,10 @@ function primaryEmail(user: ClerkUserLike): string | null {
   );
 }
 
-/** Upsert Prisma user from Clerk. Staff roles from hardcoded email map. */
+/** Upsert Prisma user from Clerk. Public customers only — never staff. */
 export async function syncUserFromClerk(clerkUser: ClerkUserLike) {
   const email = primaryEmail(clerkUser);
-  const role = roleForEmail(email);
+  const role = R.CUSTOMER;
   const name =
     [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
     clerkUser.username ||
@@ -48,7 +48,7 @@ export async function syncUserFromClerk(clerkUser: ClerkUserLike) {
         email: email ?? existingByClerk.email,
         name,
         image,
-        role,
+        role: R.CUSTOMER,
         emailVerified: email ? new Date() : existingByClerk.emailVerified,
       },
     });
@@ -63,7 +63,6 @@ export async function syncUserFromClerk(clerkUser: ClerkUserLike) {
           clerkId: clerkUser.id,
           name: name ?? existingByEmail.name,
           image: image ?? existingByEmail.image,
-          role,
           emailVerified: new Date(),
         },
       });
@@ -92,7 +91,7 @@ export async function syncUserFromClerk(clerkUser: ClerkUserLike) {
   return created;
 }
 
-/** Drop-in replacement for Auth.js auth(). */
+/** Customer session via Clerk. Admin panel uses getAdminSession() instead. */
 export async function auth(): Promise<AppSession | null> {
   const { userId } = await clerkAuth();
   if (!userId) return null;
@@ -108,7 +107,7 @@ export async function auth(): Promise<AppSession | null> {
       id: dbUser.id,
       email: dbUser.email,
       name: dbUser.name,
-      role: dbUser.role as Role,
+      role: R.CUSTOMER,
       image: dbUser.image,
     },
   };

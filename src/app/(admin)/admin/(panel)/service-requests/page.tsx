@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { ServiceKanban } from "@/features/admin/components/ServiceKanban";
 import { adminQuery } from "@/features/admin/guard";
 import { AdminPermission } from "@/features/admin/permissions";
@@ -11,7 +11,7 @@ import { hasAnyRole } from "@/lib/rbac";
 export const dynamic = "force-dynamic";
 
 export default async function AdminServiceRequestsPage() {
-  const session = await auth();
+  const session = await getAdminSession();
   const canManage = hasAnyRole(session, [...AdminPermission.SERVICE_REQUESTS]);
 
   const [requests, technicians] = await Promise.all([

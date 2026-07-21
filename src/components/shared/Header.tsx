@@ -25,7 +25,7 @@ import { useCart } from "@/features/cart/CartContext";
 import type { CartSummary } from "@/features/cart/types";
 import { cn } from "@/lib/utils";
 
-type NavLeaf = { label: string; href: string };
+type NavLeaf = { label: string; href: string; featured?: boolean };
 
 type NavGroup = {
   label: string;
@@ -45,7 +45,7 @@ type NavItem = {
  */
 const navItems: NavItem[] = [
   {
-    label: "Home & Family",
+    label: "Family",
     href: "/category/residential",
     groups: [
       { label: "RO Purifier", href: "/category/ro-purifier" },
@@ -58,7 +58,59 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    label: "Business & Industry",
+    label: "Mother & Child",
+    href: "/category/mother-and-child",
+    groups: [
+      { label: "RO UV Alkaline", href: "/category/ro-uv-alkaline" },
+      { label: "Formalin Removal", href: "/category/formalin-removal" },
+      { label: "Shower Filter", href: "/category/shower-filter" },
+      { label: "Air Purifier", href: "/category/air-purifier" },
+    ],
+  },
+  {
+    label: "Accessories",
+    href: "/category/accessories",
+    groups: [
+      {
+        label: "Water Purifier Accessories",
+        href: "/category/accessories",
+        children: [
+          { label: "P.P Filter", href: "/category/pp-filter" },
+          { label: "Membrane", href: "/category/membrane" },
+          { label: "Alkaline", href: "/category/alkaline-cartridge" },
+          { label: "Mineral", href: "/category/mineral-cartridge" },
+          { label: "Motor / Adaptor", href: "/category/adapter" },
+          { label: "UV Lamp", href: "/category/uv-lamp" },
+        ],
+      },
+      {
+        label: "Installation",
+        href: "/category/accessories",
+        children: [
+          {
+            label: "Meter",
+            href: "/category/tds-meter",
+            featured: true,
+          },
+          { label: "Tap", href: "/category/tap" },
+          { label: "Fittings", href: "/category/fittings" },
+        ],
+      },
+      {
+        label: "Mother & Child",
+        href: "/category/formalin-cartridge",
+        children: [
+          { label: "Alkaline Cartridge", href: "/category/alkaline-cartridge" },
+          { label: "Formalin Filter", href: "/category/formalin-cartridge" },
+          { label: "Shower Filter Cartridge", href: "/category/shower-cartridge" },
+          { label: "Air Purifier Filter", href: "/category/air-purifier-filter" },
+          { label: "Baby Nano Filter", href: "/category/baby-nano-filter" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Office / Commercial",
     href: "/commercial-solutions",
     groups: [
       {
@@ -82,49 +134,10 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    label: "Accessories",
-    href: "/category/accessories",
-    groups: [
-      {
-        label: "Water Purifier Accessories",
-        href: "/category/accessories",
-        children: [
-          { label: "P.P Filter", href: "/category/pp-filter" },
-          { label: "Box / Net / Post Carbon", href: "/category/post-carbon" },
-          { label: "Membrane", href: "/category/membrane" },
-          { label: "Post Carbon T33", href: "/category/t33" },
-          { label: "Alkaline", href: "/category/alkaline-cartridge" },
-          { label: "Mineral", href: "/category/mineral-cartridge" },
-        ],
-      },
-      {
-        label: "Parts & Hardware",
-        href: "/category/accessories",
-        children: [
-          { label: "Motor / Adaptor", href: "/category/adapter" },
-          { label: "UV Lamp", href: "/category/uv-lamp" },
-          { label: "Tap", href: "/category/tap" },
-          { label: "Fittings", href: "/category/fittings" },
-          { label: "Meter", href: "/category/tds-meter" },
-        ],
-      },
-    ],
-  },
-  {
-    label: "Mother & Child",
-    href: "/category/mother-and-child",
-    groups: [
-      { label: "RO UV Alkaline", href: "/category/ro-uv-alkaline" },
-      { label: "Formalin Removal", href: "/category/formalin-removal" },
-      { label: "Shower Filter", href: "/category/shower-filter" },
-      { label: "Air Purifier", href: "/category/air-purifier" },
-    ],
-  },
-  {
     label: "Brand",
     href: "/brands",
     groups: [
-      { label: "AquaPure", href: "/brands?brand=AquaPure" },
+      { label: "Vision", href: "/brands?brand=Vision" },
       { label: "Kent", href: "/brands?brand=Kent" },
       { label: "Livpure", href: "/brands?brand=Livpure" },
       { label: "Pureit", href: "/brands?brand=Pureit" },
@@ -143,6 +156,18 @@ const navItems: NavItem[] = [
     ],
   },
   { label: "Contact Us", href: "/contact" },
+];
+
+const marqueeMessages: React.ReactNode[] = [
+  <>
+    🎉 নতুন সংযোজন:{" "}
+    <span className="rounded-full bg-white/15 px-2 py-0.5 font-extrabold text-white ring-1 ring-white/40">
+      ডিজিটাল TDS মিটার
+    </span>{" "}
+    — সহজে পানির TDS মাত্রা পরীক্ষা করুন
+  </>,
+  <> এখন বিশেষ কম দামে</>,
+  <> সীমিত স্টক — আজই অর্ডার করুন</>,
 ];
 
 const panelVariants: Variants = {
@@ -179,14 +204,17 @@ const flyoutVariants: Variants = {
   },
 };
 
-function AquaPureLogo() {
+function BrandLogo() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="AquaPure home">
+    <Link
+      href="/"
+      className="group flex shrink-0 items-center gap-2.5"
+      aria-label="Padma Mineral Water home"
+    >
       <span className="relative grid size-11 place-items-center overflow-hidden rounded-2xl bg-primary text-white shadow-[0_10px_22px_rgba(27,79,209,0.25)]">
         <span className="absolute -right-2 -top-2 size-7 rounded-full bg-sky-300/50" />
-        {/* Water-drop drip animation on the logo */}
         <motion.span
           className="relative z-[1] flex h-7 w-6 items-start justify-center"
           animate={
@@ -232,10 +260,10 @@ function AquaPureLogo() {
       </span>
       <span>
         <span className="block text-xl font-extrabold leading-5 tracking-[-0.04em] text-primary">
-          AquaPure
+          PMW
         </span>
-        <span className="text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-          Pure water. Pure life.
+        <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          Safe water. Safe life.
         </span>
       </span>
     </Link>
@@ -326,10 +354,20 @@ function CascadingDropdown({
                   <Link
                     href={child.href}
                     role="menuitem"
-                    className="block whitespace-nowrap px-4 py-[11px] text-[13px] font-medium text-slate-700 transition-colors hover:bg-[#123a9b] hover:text-white"
+                    className={cn(
+                      "flex items-center justify-between gap-3 whitespace-nowrap px-4 py-[11px] text-[13px] font-medium transition-colors hover:bg-[#123a9b] hover:text-white",
+                      child.featured
+                        ? "bg-sky-50/80 text-slate-900"
+                        : "text-slate-700",
+                    )}
                     onClick={onClose}
                   >
-                    {child.label}
+                    <span>{child.label}</span>
+                    {child.featured && (
+                      <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary group-hover:bg-white/20">
+                        Featured
+                      </span>
+                    )}
                   </Link>
                 </li>
               ))}
@@ -374,35 +412,42 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
     <>
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
         <div className="bg-[#123a9b] text-white">
-          <div className="section-shell flex min-h-9 items-center justify-between gap-4 text-[11px] font-medium">
-            <div className="hidden items-center gap-5 md:flex">
-              <a
-                href="tel:+8801700000000"
-                className="flex items-center gap-1.5 transition hover:text-sky-200"
-              >
-                <Phone className="size-3.5" /> +880 1700-000000
-              </a>
-              <a
-                href="https://wa.me/8801700000000"
-                className="flex items-center gap-1.5 transition hover:text-sky-200"
-              >
-                <MessageCircle className="size-3.5" /> WhatsApp
-              </a>
-              <a
-                href="mailto:care@aquapure.com"
-                className="flex items-center gap-1.5 transition hover:text-sky-200"
-              >
-                <Mail className="size-3.5" /> care@aquapure.com
-              </a>
+          <div className="section-shell flex min-h-14 items-center gap-4 py-2.5 text-[12px] font-medium sm:min-h-16">
+            {/* Left — scrolling announcements */}
+            <div className="topbar-marquee min-w-0 flex-1">
+              <div className="topbar-marquee-track">
+                {[0, 1].map((copy) => (
+                  <div
+                    key={copy}
+                    className="flex shrink-0 items-center gap-3 pr-3"
+                    aria-hidden={copy === 1}
+                  >
+                    {marqueeMessages.map((msg, i) => (
+                      <span
+                        key={`${copy}-${i}`}
+                        className="inline-flex items-center gap-3 whitespace-nowrap text-sky-50/95"
+                      >
+                        {i > 0 && (
+                          <span className="size-1 shrink-0 rounded-full bg-sky-300/70" />
+                        )}
+                        <span className="font-semibold tracking-wide">{msg}</span>
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex w-full items-center justify-end gap-4 md:w-auto">
+
+            {/* Right — account + contacts */}
+            <div className="flex shrink-0 items-center gap-3 border-l border-white/20 pl-3 sm:gap-4 sm:pl-4">
               {!isSignedIn ? (
                 <>
                   <Link
                     href="/sign-in"
                     className="flex items-center gap-1.5 transition hover:text-sky-200"
                   >
-                    <UserRound className="size-3.5" /> Sign in
+                    <UserRound className="size-3.5" />
+                    <span className="hidden sm:inline">Sign in</span>
                   </Link>
                   <Link
                     href="/sign-up"
@@ -417,22 +462,42 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
                     href="/account"
                     className="flex items-center gap-1.5 transition hover:text-sky-200"
                   >
-                    <UserRound className="size-3.5" /> My Account
+                    <UserRound className="size-3.5" />
+                    <span className="hidden sm:inline">My Account</span>
                   </Link>
                   <SignOutButton signOutOptions={{ redirectUrl: "/" }}>
                     <button
                       type="button"
                       className="flex items-center gap-1.5 transition hover:text-sky-200"
                     >
-                      <LogOut className="size-3.5" /> Log out
+                      <LogOut className="size-3.5" />
+                      <span className="hidden sm:inline">Log out</span>
                     </button>
                   </SignOutButton>
                 </>
               )}
+              <span className="hidden h-3.5 w-px bg-white/25 sm:block" aria-hidden />
+              <a
+                href="tel:+8801700000000"
+                className="flex items-center gap-1.5 transition hover:text-sky-200"
+                aria-label="Call us"
+              >
+                <Phone className="size-3.5" />
+                <span className="hidden md:inline">+880 1700-000000</span>
+              </a>
+              <a
+                href="https://wa.me/8801700000000"
+                className="flex items-center gap-1.5 transition hover:text-sky-200"
+                aria-label="WhatsApp"
+              >
+                <MessageCircle className="size-3.5" />
+                <span className="hidden lg:inline">WhatsApp</span>
+              </a>
               <Link
                 href="/contact"
                 className="hidden items-center gap-1.5 transition hover:text-sky-200 sm:flex"
               >
+                <Mail className="size-3.5" />
                 Contact
               </Link>
             </div>
@@ -442,7 +507,7 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
         {/* overflow-visible so L3 flyouts are not clipped */}
         <div className="relative overflow-visible">
           <div className="section-shell flex h-[72px] items-center gap-4 overflow-visible">
-            <AquaPureLogo />
+            <BrandLogo />
 
             <nav
               className="ml-2 hidden h-full flex-1 items-center gap-0 overflow-visible lg:flex"
@@ -621,9 +686,19 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
                                             <Link
                                               href={child.href}
                                               onClick={() => setMobileOpen(false)}
-                                              className="block px-4 py-2.5 text-sm text-slate-600 hover:bg-[#123a9b] hover:text-white"
+                                              className={cn(
+                                                "flex items-center justify-between gap-2 px-4 py-2.5 text-sm transition hover:bg-[#123a9b] hover:text-white",
+                                                child.featured
+                                                  ? "bg-sky-50/80 font-semibold text-slate-800"
+                                                  : "text-slate-600",
+                                              )}
                                             >
-                                              {child.label}
+                                              <span>{child.label}</span>
+                                              {child.featured && (
+                                                <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                                                  Featured
+                                                </span>
+                                              )}
                                             </Link>
                                           </li>
                                         ))}

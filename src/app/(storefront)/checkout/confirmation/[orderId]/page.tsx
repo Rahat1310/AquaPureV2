@@ -8,8 +8,8 @@ import { getOrderById } from "@/features/checkout/queries";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Order Confirmed — AquaPure",
-  description: "Your AquaPure order has been placed successfully.",
+  title: "Order Confirmed — Padma Mineral Water",
+  description: "Your Padma Mineral Water order has been placed successfully.",
 };
 
 export const dynamic = "force-dynamic";

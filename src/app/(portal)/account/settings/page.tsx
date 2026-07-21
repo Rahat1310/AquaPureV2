@@ -14,8 +14,8 @@ import { ProfileSettingsForm } from "@/features/portal/components/ProfileSetting
 import { getProfileByUser } from "@/features/portal/queries";
 
 export const metadata: Metadata = {
-  title: "Settings — AquaPure",
-  description: "Update your AquaPure profile and account security.",
+  title: "Settings — Padma Mineral Water",
+  description: "Update your Padma Mineral Water profile and account security.",
 };
 
 export const dynamic = "force-dynamic";

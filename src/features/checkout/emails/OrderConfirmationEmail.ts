@@ -34,7 +34,7 @@ export function renderOrderConfirmationEmail(order: OrderSummaryDTO): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Order Confirmation — AquaPure</title>
+  <title>Order Confirmation — Padma Mineral Water</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4ff;padding:40px 20px;">
@@ -52,7 +52,7 @@ export function renderOrderConfirmationEmail(order: OrderSummaryDTO): string {
                     <path d="M9.8 27.4c2.3 3.2 7 4.2 11.4 1.5" stroke="#75D6FF" stroke-width="2.4" stroke-linecap="round"/>
                   </svg>
                 </div>
-                <span style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.04em;">AquaPure</span>
+                <span style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.04em;">PMW</span>
               </div>
               <h1 style="margin:20px 0 8px;font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.03em;">Order Confirmed! 🎉</h1>
               <p style="margin:0;font-size:15px;color:rgba(255,255,255,0.85);">Thank you for your order. We're getting it ready!</p>
@@ -120,7 +120,7 @@ export function renderOrderConfirmationEmail(order: OrderSummaryDTO): string {
           <!-- CTA -->
           <tr>
             <td style="padding:32px 40px;text-align:center;">
-              <a href="${process.env.NEXT_PUBLIC_BASE_URL ?? "https://aquapure.com"}/orders/${order.id}"
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL ?? "https://padmamineralwater.com"}/orders/${order.id}"
                 style="display:inline-block;background:linear-gradient(135deg,#1b4fd1,#0ea5e9);color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 32px;border-radius:12px;letter-spacing:-0.01em;">
                 Track Your Order →
               </a>
@@ -130,8 +130,8 @@ export function renderOrderConfirmationEmail(order: OrderSummaryDTO): string {
           <!-- Footer -->
           <tr>
             <td style="padding:20px 40px 40px;text-align:center;border-top:1px solid #e5eaf5;">
-              <p style="margin:0;font-size:12px;color:#94a3b8;">Questions? Email us at <a href="mailto:care@aquapure.com" style="color:#1b4fd1;">care@aquapure.com</a></p>
-              <p style="margin:8px 0 0;font-size:12px;color:#cbd5e1;">AquaPure — Pure water. Pure life.</p>
+              <p style="margin:0;font-size:12px;color:#94a3b8;">Questions? Email us at <a href="mailto:care@padmamineralwater.com" style="color:#1b4fd1;">care@padmamineralwater.com</a></p>
+              <p style="margin:8px 0 0;font-size:12px;color:#cbd5e1;">Padma Mineral Water — Safe water. Safe life.</p>
             </td>
           </tr>
 

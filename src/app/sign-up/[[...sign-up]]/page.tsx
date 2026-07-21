@@ -2,7 +2,7 @@ import { SignUp } from "@clerk/nextjs";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Create Account — AquaPure",
+  title: "Create Account — Padma Mineral Water",
 };
 
 export default function SignUpPage() {
@@ -11,10 +11,10 @@ export default function SignUpPage() {
       <div className="flex flex-col items-center gap-6">
         <div className="text-center">
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
-            Create your AquaPure account
+            Create your PMW account
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Register as a customer to track orders, wishlist, and service requests.
+            Join Padma Mineral Water to track orders, wishlist, and service requests.
           </p>
         </div>
         <SignUp

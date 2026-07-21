@@ -33,7 +33,7 @@ export function renderQuoteNotificationEmail(quote: QuoteNotificationData): stri
 
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8" /><title>New Quote Request — AquaPure</title></head>
+<head><meta charset="UTF-8" /><title>New Quote Request — Padma Mineral Water</title></head>
 <body style="margin:0;padding:0;background:#f0f4ff;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:30px 20px;background:#f0f4ff;">
     <tr>
@@ -42,7 +42,7 @@ export function renderQuoteNotificationEmail(quote: QuoteNotificationData): stri
           <tr>
             <td style="background:linear-gradient(135deg,#1b4fd1,#0ea5e9);padding:28px 32px;">
               <h1 style="margin:0;font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.03em;">🧾 New Quote Request</h1>
-              <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">A customer has submitted a consultation request on AquaPure.</p>
+              <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">A customer has submitted a consultation request on Padma Mineral Water.</p>
             </td>
           </tr>
           <tr>
@@ -62,7 +62,7 @@ export function renderQuoteNotificationEmail(quote: QuoteNotificationData): stri
           </tr>
           <tr>
             <td style="padding:0 32px 28px;text-align:center;">
-              <a href="${process.env.NEXT_PUBLIC_BASE_URL ?? "https://aquapure.com"}/admin/quotes/${quote.id}"
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL ?? "https://padmamineralwater.com"}/admin/quotes/${quote.id}"
                 style="display:inline-block;background:#1b4fd1;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 28px;border-radius:10px;">
                 View in Admin →
               </a>

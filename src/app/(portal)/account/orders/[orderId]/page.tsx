@@ -25,7 +25,7 @@ type PageProps = {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { orderId } = await params;
   return {
-    title: `Order #${orderId.slice(-8).toUpperCase()} — AquaPure`,
+    title: `Order #${orderId.slice(-8).toUpperCase()} — Padma Mineral Water`,
   };
 }
 

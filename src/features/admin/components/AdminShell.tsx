@@ -14,9 +14,8 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
-import { SignOutButton } from "@clerk/nextjs";
-
 import type { NavItem } from "@/features/admin/permissions";
+import { adminLogout } from "@/features/admin/login-actions";
 import { roleLabel } from "@/features/admin/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -54,7 +53,7 @@ export function AdminShell({ nav, user, children }: AdminShellProps) {
               <Shield className="size-4" />
             </div>
             <div>
-              <p className="text-sm font-bold tracking-tight text-white">AquaPure</p>
+              <p className="text-sm font-bold tracking-tight text-white">PMW</p>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                 Admin
               </p>
@@ -87,23 +86,23 @@ export function AdminShell({ nav, user, children }: AdminShellProps) {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-6">
             <div className="min-w-0 lg:hidden">
-              <p className="truncate text-sm font-bold text-slate-900">AquaPure Admin</p>
+              <p className="truncate text-sm font-bold text-slate-900">PMW Admin</p>
             </div>
             <div className="ml-auto flex items-center gap-3">
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold text-slate-900">
-                  {user.name ?? "Staff"}
+                  {user.name ?? "Admin"}
                 </p>
                 <p className="text-[11px] font-medium text-slate-500">
                   {roleLabel(user.role)}
                 </p>
               </div>
-              <SignOutButton signOutOptions={{ redirectUrl: "/admin/sign-in" }}>
-                <Button type="button" variant="outline" size="sm" className="gap-1.5">
+              <form action={adminLogout}>
+                <Button type="submit" variant="outline" size="sm" className="gap-1.5">
                   <LogOut className="size-3.5" />
                   Sign out
                 </Button>
-              </SignOutButton>
+              </form>
             </div>
           </header>
 

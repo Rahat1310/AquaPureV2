@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { auth } from "@/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { ProductForm } from "@/features/admin/components/ProductForm";
 import { adminQuery } from "@/features/admin/guard";
 import { AdminPermission } from "@/features/admin/permissions";
@@ -11,7 +11,7 @@ import { hasAnyRole } from "@/lib/rbac";
 export const dynamic = "force-dynamic";
 
 export default async function AdminNewProductPage() {
-  const session = await auth();
+  const session = await getAdminSession();
   if (!hasAnyRole(session, [...AdminPermission.PRODUCTS_WRITE])) {
     redirect("/admin/products");
   }
@@ -31,7 +31,7 @@ export default async function AdminNewProductPage() {
           New product
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          Add a SKU to the AquaPure catalog.
+          Add a SKU to the PMW catalog.
         </p>
       </div>
 

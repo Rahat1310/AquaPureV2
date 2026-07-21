@@ -9,8 +9,8 @@ import { getCartSummary } from "@/features/cart/queries";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Checkout — AquaPure",
-  description: "Complete your AquaPure order: delivery address, options, and payment.",
+  title: "Checkout — Padma Mineral Water",
+  description: "Complete your Padma Mineral Water order: delivery address, options, and payment.",
 };
 
 export const dynamic = "force-dynamic";

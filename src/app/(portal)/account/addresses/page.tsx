@@ -6,7 +6,7 @@ import { AddressManager } from "@/features/portal/components/AddressManager";
 import { getAddressesByUser } from "@/features/portal/queries";
 
 export const metadata: Metadata = {
-  title: "Addresses — AquaPure",
+  title: "Addresses — Padma Mineral Water",
   description: "Manage your saved delivery addresses.",
 };
 

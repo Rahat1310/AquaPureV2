@@ -78,7 +78,10 @@ export function ProductCard({
       {badge && (
         <Badge
           variant={badgeVariant}
-          className="absolute left-4 top-4 rounded-full px-3 py-1 shadow-sm"
+          className={cn(
+            "absolute left-4 top-4 rounded-full px-3 py-1 shadow-sm",
+            badge === "Best Seller" && "featured-badge-pulse",
+          )}
         >
           {badge}
         </Badge>

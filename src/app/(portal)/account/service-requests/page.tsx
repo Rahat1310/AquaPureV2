@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getServiceRequestsByUser } from "@/features/portal/queries";
 
 export const metadata: Metadata = {
-  title: "Service Requests — AquaPure",
+  title: "Service Requests — Padma Mineral Water",
   description: "Track your AMC, installation, and warranty requests.",
 };
 

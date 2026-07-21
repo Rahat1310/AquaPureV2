@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Admin Portal | AquaPure",
-  description: "Secure administrative access for AquaPure staff.",
+  title: "Admin Portal | Padma Mineral Water",
+  description: "Secure administrative access for PMW staff.",
 };
 
 export default function AdminSignInLayout({

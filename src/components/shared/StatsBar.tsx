@@ -28,7 +28,7 @@ export function StatsBar({ items = defaultStats, className }: StatsBarProps) {
         className,
       )}
       role="group"
-      aria-label="AquaPure at a glance"
+      aria-label="Padma Mineral Water at a glance"
     >
       <div className="grid grid-cols-2 gap-6 lg:grid-cols-4 lg:gap-4">
         {items.map((item) => {

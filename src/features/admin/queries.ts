@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 
-import { auth } from "@/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { requireRole, Role } from "@/lib/rbac";
 
@@ -46,7 +46,7 @@ const DEFAULT_PAGE_SIZE = 20;
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export async function getAdminDashboardStats() {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.DASHBOARD]);
 
   const [
@@ -113,7 +113,7 @@ export async function getAdminDashboardStats() {
 // ─── Products ─────────────────────────────────────────────────────────────────
 
 export async function listProducts(filters: unknown = {}) {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.PRODUCTS_READ]);
 
   const parsed = listProductsFilterSchema.safeParse(filters ?? {});
@@ -195,7 +195,7 @@ export async function listProducts(filters: unknown = {}) {
 }
 
 export async function getProductForEdit(id: string) {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.PRODUCTS_READ]);
 
   const product = await prisma.product.findUnique({
@@ -241,7 +241,7 @@ export async function getProductForEdit(id: string) {
 }
 
 export async function listCategories() {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.PRODUCTS_READ]);
 
   return prisma.category.findMany({
@@ -260,7 +260,7 @@ export async function listCategories() {
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
 export async function listOrders(filters: unknown = {}) {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.ORDERS]);
 
   const parsed = listOrdersFilterSchema.safeParse(filters ?? {});
@@ -320,7 +320,7 @@ export async function listOrders(filters: unknown = {}) {
 }
 
 export async function getOrderAdmin(id: string) {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.ORDERS]);
 
   const order = await prisma.order.findUnique({
@@ -395,7 +395,7 @@ export async function getOrderAdmin(id: string) {
 // ─── Service requests ─────────────────────────────────────────────────────────
 
 export async function listServiceRequests() {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.SERVICE_REQUESTS]);
 
   const rows = await prisma.serviceRequest.findMany({
@@ -410,7 +410,7 @@ export async function listServiceRequests() {
 }
 
 export async function listTechnicians() {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.SERVICE_REQUESTS]);
 
   return prisma.user.findMany({
@@ -434,7 +434,7 @@ export async function listTechnicians() {
 // ─── Users ────────────────────────────────────────────────────────────────────
 
 export async function listUsers(filters: unknown = {}) {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.USERS]);
 
   const parsed = listUsersFilterSchema.safeParse(filters ?? {});
@@ -487,7 +487,7 @@ export async function listUsers(filters: unknown = {}) {
 // ─── Quotes ───────────────────────────────────────────────────────────────────
 
 export async function listQuoteRequests(filters: unknown = {}) {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.QUOTES]);
 
   const parsed = listQuotesFilterSchema.safeParse(filters ?? {});
@@ -520,7 +520,7 @@ export async function listQuoteRequests(filters: unknown = {}) {
 }
 
 export async function listSalesReps() {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.QUOTES]);
 
   return prisma.user.findMany({
@@ -541,7 +541,7 @@ export async function listSalesReps() {
 // ─── Audit logs ───────────────────────────────────────────────────────────────
 
 export async function listAuditLogs(filters: unknown = {}) {
-  const session = await auth();
+  const session = await getAdminSession();
   requireRole(session, [...AdminPermission.AUDIT]);
 
   const parsed = auditFiltersSchema.safeParse(filters ?? {});

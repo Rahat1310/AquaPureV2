@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {
-    default: "Admin | AquaPure",
-    template: "%s | AquaPure Admin",
+    default: "Admin | PMW",
+    template: "%s | PMW Admin",
   },
 };
 

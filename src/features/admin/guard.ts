@@ -6,7 +6,7 @@ export async function adminQuery<T>(fn: () => Promise<T>): Promise<T> {
     return await fn();
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message === "UNAUTHORIZED") redirect("/admin/sign-in");
+      if (error.message === "UNAUTHORIZED") redirect("/admin/login");
       if (error.message === "FORBIDDEN") redirect("/admin");
     }
     throw error;

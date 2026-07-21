@@ -10,8 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getOrdersByUser } from "@/features/checkout/queries";
 
 export const metadata: Metadata = {
-  title: "Orders — AquaPure",
-  description: "Your AquaPure order history and delivery status.",
+  title: "Orders — Padma Mineral Water",
+  description: "Your Padma Mineral Water order history and delivery status.",
 };
 
 export const dynamic = "force-dynamic";

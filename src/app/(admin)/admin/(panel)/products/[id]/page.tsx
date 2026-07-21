@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { auth } from "@/auth";
 import { ProductForm } from "@/features/admin/components/ProductForm";
 import { adminQuery } from "@/features/admin/guard";
 import { AdminPermission } from "@/features/admin/permissions";
 import { getProductForEdit, listCategories } from "@/features/admin/queries";
+import { getAdminSession } from "@/lib/admin-auth";
 import { hasAnyRole } from "@/lib/rbac";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ export default async function AdminEditProductPage({
   params: Params;
 }) {
   const { id } = await params;
-  const session = await auth();
+  const session = await getAdminSession();
   if (!hasAnyRole(session, [...AdminPermission.PRODUCTS_WRITE])) {
     redirect("/admin/products");
   }

@@ -5,12 +5,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Brands — AquaPure",
-  description: "Browse AquaPure partner brands and country origins.",
+  title: "Brands — Padma Mineral Water",
+  description: "Browse Padma Mineral Water partner brands and country origins.",
 };
 
 const brands = [
-  { name: "AquaPure", country: "Bangladesh" },
+  { name: "PMW", country: "Bangladesh" },
   { name: "Kent", country: "India" },
   { name: "Livpure", country: "India" },
   { name: "Pureit", country: "India" },

@@ -8,8 +8,8 @@ import { getOrdersByUser } from "@/features/checkout/queries";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "My Orders — AquaPure",
-  description: "View all your AquaPure orders and track their delivery status.",
+  title: "My Orders — Padma Mineral Water",
+  description: "View all your Padma Mineral Water orders and track their delivery status.",
 };
 
 export const dynamic = "force-dynamic";

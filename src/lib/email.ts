@@ -21,7 +21,7 @@ interface EmailPayload {
 }
 
 export async function sendEmail(payload: EmailPayload): Promise<void> {
-  const from = payload.from ?? (process.env.EMAIL_FROM ?? "AquaPure <noreply@aquapure.com>");
+  const from = payload.from ?? (process.env.EMAIL_FROM ?? "Padma Mineral Water <noreply@padmamineralwater.com>");
   const to = Array.isArray(payload.to) ? payload.to : [payload.to];
 
   // ── Resend ──────────────────────────────────────────────────────────────────

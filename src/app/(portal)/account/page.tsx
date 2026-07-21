@@ -17,8 +17,8 @@ import { getPortalOverview } from "@/features/portal/queries";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "My Account — AquaPure",
-  description: "Your AquaPure customer portal overview.",
+  title: "My Account — Padma Mineral Water",
+  description: "Your Padma Mineral Water customer portal overview.",
 };
 
 export const dynamic = "force-dynamic";
