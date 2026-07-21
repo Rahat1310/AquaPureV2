@@ -84,6 +84,17 @@ const navItems: NavItem[] = [
         ],
       },
       {
+        label: "Mother & Child",
+        href: "/category/formalin-cartridge",
+        children: [
+          { label: "Alkaline Cartridge", href: "/category/alkaline-cartridge" },
+          { label: "Formalin Filter", href: "/category/formalin-cartridge" },
+          { label: "Shower Filter Cartridge", href: "/category/shower-cartridge" },
+          { label: "Air Purifier Filter", href: "/category/air-purifier-filter" },
+          { label: "Baby Nano Filter", href: "/category/baby-nano-filter" },
+        ],
+      },
+      {
         label: "Installation",
         href: "/category/accessories",
         children: [
@@ -94,17 +105,6 @@ const navItems: NavItem[] = [
           },
           { label: "Tap", href: "/category/tap" },
           { label: "Fittings", href: "/category/fittings" },
-        ],
-      },
-      {
-        label: "Mother & Child",
-        href: "/category/formalin-cartridge",
-        children: [
-          { label: "Alkaline Cartridge", href: "/category/alkaline-cartridge" },
-          { label: "Formalin Filter", href: "/category/formalin-cartridge" },
-          { label: "Shower Filter Cartridge", href: "/category/shower-cartridge" },
-          { label: "Air Purifier Filter", href: "/category/air-purifier-filter" },
-          { label: "Baby Nano Filter", href: "/category/baby-nano-filter" },
         ],
       },
     ],
