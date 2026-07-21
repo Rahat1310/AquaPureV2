@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   },
   description:
     "Padma Mineral Water (PMW) — safe water, safe life. Premium purification for homes, businesses, and industries across Bangladesh.",
+  icons: {
+    icon: [{ url: "/logo.png", type: "image/png" }],
+    shortcut: ["/logo.png"],
+    apple: [{ url: "/logo.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
