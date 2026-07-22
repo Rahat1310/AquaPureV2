@@ -6,40 +6,26 @@ import { auth } from "@/auth";
 import { clearCart } from "@/features/cart/actions";
 import { getCartSummary } from "@/features/cart/queries";
 import { renderOrderConfirmationEmail } from "@/features/checkout/emails/OrderConfirmationEmail";
+import {
+  BKASH_DELIVERY_CHARGE,
+  COD_DELIVERY_CHARGE,
+  createOrderSchema,
+} from "@/features/checkout/schema";
+import type { CreateOrderResult, OrderSummaryDTO } from "@/features/checkout/types";
 import { logAudit } from "@/lib/audit-log";
 import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
-
-import { createOrderSchema } from "./schema";
-import type { CreateOrderResult, OrderSummaryDTO } from "./types";
-
-// ─── Shipping fee schedule ─────────────────────────────────────────────────────
-
-const SHIPPING_RATES: Record<string, number> = {
-  STANDARD: 0,    // Free standard delivery
-  EXPRESS: 299,   // BDT 299 for express
-};
-
-// ─── Order number generator ───────────────────────────────────────────────────
 
 function generateOrderNumber(): string {
   const date = new Date();
   const ymd = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
   const rand = Math.floor(Math.random() * 90000) + 10000;
-  return `AQ-${ymd}-${rand}`;
+  return `PMW-${ymd}-${rand}`;
 }
 
-// ─── Create Order ─────────────────────────────────────────────────────────────
-
 /**
- * Creates an Order in PENDING status after validating cart + stock server-side.
- *
- * - Requires authenticated session (CUSTOMER role enforced).
- * - Validates input with Zod.
- * - Re-checks stock for every cart item inside a DB transaction.
- * - Sets a unique transactionRef (UUID) for idempotent webhook handling.
- * - Calls logAudit() after creation.
- * - Sends order confirmation email non-blocking.
+ * Place order after Clerk auth. COD → 100 BDT delivery + payment Pending.
+ * bKash → 0 delivery, store sender + TrxID, payment Pending until verified.
  */
 export async function createOrder(input: unknown): Promise<CreateOrderResult> {
   const session = await auth();
@@ -57,25 +43,30 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
     };
   }
 
-  const { address, deliveryOption, installationOption, paymentMethod, notes } =
-    parsed.data;
+  const {
+    address,
+    deliveryOption,
+    installationOption,
+    paymentMethod,
+    bkashSenderNumber,
+    bkashTrxId,
+    notes,
+  } = parsed.data;
 
-  // ── Load cart ──────────────────────────────────────────────────────────────
   const cart = await getCartSummary(userId);
   if (cart.items.length === 0) {
     return { ok: false, error: "Your cart is empty." };
   }
 
-  const shipping = SHIPPING_RATES[deliveryOption] ?? 0;
-  const tax = 0; // VAT can be added later
+  const shipping =
+    paymentMethod === "COD" ? COD_DELIVERY_CHARGE : BKASH_DELIVERY_CHARGE;
+  const tax = 0;
   const total = cart.subtotal + shipping + tax;
   const transactionRef = randomUUID();
   const orderNumber = generateOrderNumber();
 
-  // ── DB Transaction: stock re-check + order creation ───────────────────────
   try {
     const order = await prisma.$transaction(async (tx) => {
-      // Re-check stock for every item
       for (const item of cart.items) {
         if (item.variantId) {
           const variant = await tx.productVariant.findUnique({
@@ -84,7 +75,7 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
           });
           if (!variant || variant.stock < item.qty) {
             throw new Error(
-              `"${item.name}" (${item.variantName ?? item.variantId}) does not have enough stock. Available: ${variant?.stock ?? 0}, Requested: ${item.qty}`,
+              `"${item.name}" does not have enough stock. Available: ${variant?.stock ?? 0}`,
             );
           }
         } else {
@@ -94,13 +85,12 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
           });
           if (!product || product.stock < item.qty) {
             throw new Error(
-              `"${item.name}" does not have enough stock. Available: ${product?.stock ?? 0}, Requested: ${item.qty}`,
+              `"${item.name}" does not have enough stock. Available: ${product?.stock ?? 0}`,
             );
           }
         }
       }
 
-      // Create Address record
       const addressRecord = await tx.address.create({
         data: {
           userId,
@@ -115,13 +105,13 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
         },
       });
 
-      // Create Order
-      const newOrder = await tx.order.create({
+      return tx.order.create({
         data: {
           orderNumber,
           userId,
           addressId: addressRecord.id,
           status: "PENDING",
+          paymentStatus: "PENDING",
           subtotal: cart.subtotal,
           shipping,
           tax,
@@ -129,6 +119,9 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
           deliveryOption,
           installationOption,
           paymentMethod,
+          bkashSenderNumber:
+            paymentMethod === "BKASH" ? bkashSenderNumber?.trim() || null : null,
+          bkashTrxId: paymentMethod === "BKASH" ? bkashTrxId?.trim() || null : null,
           notes: notes || null,
           transactionRef,
           orderItems: {
@@ -151,11 +144,8 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
           address: true,
         },
       });
-
-      return newOrder;
     });
 
-    // ── Audit log ──────────────────────────────────────────────────────────
     await logAudit({
       userId,
       action: "CREATE_ORDER",
@@ -164,27 +154,29 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
       after: {
         orderNumber: order.orderNumber,
         status: order.status,
+        paymentStatus: order.paymentStatus,
         total: order.total.toString(),
         paymentMethod,
-        deliveryOption,
       },
     });
 
-    // ── Clear cart ─────────────────────────────────────────────────────────
     await clearCart(userId);
 
-    // ── Send confirmation email (non-blocking) ────────────────────────────
     const orderSummary: OrderSummaryDTO = {
       id: order.id,
       orderNumber: order.orderNumber,
       status: order.status as OrderSummaryDTO["status"],
+      paymentStatus: (order.paymentStatus ?? "PENDING") as OrderSummaryDTO["paymentStatus"],
       subtotal: Number(order.subtotal),
       shipping: Number(order.shipping),
       tax: Number(order.tax),
       total: Number(order.total),
       paymentMethod: order.paymentMethod as OrderSummaryDTO["paymentMethod"],
       deliveryOption: order.deliveryOption as OrderSummaryDTO["deliveryOption"],
-      installationOption: order.installationOption as OrderSummaryDTO["installationOption"],
+      installationOption:
+        order.installationOption as OrderSummaryDTO["installationOption"],
+      bkashSenderNumber: order.bkashSenderNumber,
+      bkashTrxId: order.bkashTrxId,
       paidAt: null,
       createdAt: order.createdAt.toISOString(),
       address: order.address
@@ -217,9 +209,9 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
     if (userRecord?.email) {
       sendEmail({
         to: userRecord.email,
-        subject: `Order ${order.orderNumber} — Confirmed! 🎉`,
+        subject: `Order ${order.orderNumber} — Confirmed`,
         html: renderOrderConfirmationEmail(orderSummary),
-      }).catch(() => undefined); // Non-blocking; intentionally swallowed
+      }).catch(() => undefined);
     }
 
     return { ok: true, orderId: order.id, orderNumber: order.orderNumber };
@@ -229,8 +221,6 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
     return { ok: false, error: message };
   }
 }
-
-// ─── Cancel Order ─────────────────────────────────────────────────────────────
 
 export async function cancelOrder(
   orderId: string,
@@ -248,7 +238,7 @@ export async function cancelOrder(
   });
 
   if (!order) return { ok: false, error: "Order not found." };
-  if (order.status === "PAID" || order.status === "SHIPPED") {
+  if (order.status === "PAID" || order.status === "SHIPPED" || order.status === "DELIVERED") {
     return { ok: false, error: "This order cannot be cancelled." };
   }
 

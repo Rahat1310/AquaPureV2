@@ -290,14 +290,22 @@ export default async function PortalOrderDetailPage({ params }: PageProps) {
               <p className="text-sm font-semibold text-slate-900">
                 {order.paymentMethod === "COD"
                   ? "Cash on Delivery"
-                  : (order.paymentMethod ?? "—")}
+                  : order.paymentMethod === "BKASH"
+                    ? "bKash"
+                    : (order.paymentMethod ?? "—")}
               </p>
               <Badge
-                variant={order.status === "PAID" ? "success" : "warning"}
+                variant={order.paymentStatus === "PAID" ? "success" : "warning"}
                 className="mt-2"
               >
-                {order.status === "PAID" ? "PAID" : "PENDING"}
+                {order.paymentStatus === "PAID" ? "PAID" : "PENDING"}
               </Badge>
+              {order.paymentMethod === "BKASH" && order.bkashTrxId && (
+                <p className="mt-2 text-xs text-slate-500">
+                  TrxID: {order.bkashTrxId}
+                  {order.bkashSenderNumber ? ` · ${order.bkashSenderNumber}` : ""}
+                </p>
+              )}
             </CardContent>
           </Card>
 

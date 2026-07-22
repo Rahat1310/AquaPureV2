@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 
 import { NavigationLoader } from "@/components/shared/NavigationLoader";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 
 import "./globals.css";
 
@@ -42,6 +43,7 @@ export default function RootLayout({
       signInFallbackRedirectUrl="/account"
       signUpFallbackRedirectUrl="/account"
       afterSignOutUrl="/"
+      appearance={clerkAppearance}
     >
       <html lang="en">
         <body className={inter.variable} suppressHydrationWarning>

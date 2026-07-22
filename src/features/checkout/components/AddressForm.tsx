@@ -27,11 +27,11 @@ export function AddressForm({ defaultValues, onSubmit, formId = "address-form" }
       {/* Recipient name */}
       <div>
         <label className="mb-1.5 block text-sm font-semibold text-slate-700" htmlFor="recipientName">
-          Recipient Name *
+          Full Name *
         </label>
         <Input
           id="recipientName"
-          placeholder="Full name"
+          placeholder="Your full name"
           {...register("recipientName")}
         />
         {errors.recipientName && (
@@ -57,11 +57,11 @@ export function AddressForm({ defaultValues, onSubmit, formId = "address-form" }
       {/* Line 1 */}
       <div>
         <label className="mb-1.5 block text-sm font-semibold text-slate-700" htmlFor="line1">
-          Street Address *
+          Shipping Address *
         </label>
         <Input
           id="line1"
-          placeholder="House / Flat / Road"
+          placeholder="House, road, area"
           {...register("line1")}
         />
         {errors.line1 && (

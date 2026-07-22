@@ -10,6 +10,7 @@ const isCustomerProtected = createRouteMatcher([
   "/orders(.*)",
   "/wishlist(.*)",
   "/checkout(.*)",
+  "/track-order(.*)",
 ]);
 
 const isAdminPublic = createRouteMatcher([

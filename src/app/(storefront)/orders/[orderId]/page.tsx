@@ -248,17 +248,27 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <Package className="size-3.5" /> Payment
             </div>
             <p className="text-sm font-semibold text-slate-900">
-              {order.paymentMethod === "COD" ? "Cash on Delivery" : order.paymentMethod ?? "—"}
+              {order.paymentMethod === "COD"
+                ? "Cash on Delivery"
+                : order.paymentMethod === "BKASH"
+                  ? "bKash"
+                  : order.paymentMethod ?? "—"}
             </p>
             <span
               className={`mt-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                order.status === "PAID"
+                order.paymentStatus === "PAID"
                   ? "bg-emerald-100 text-emerald-700"
                   : "bg-amber-100 text-amber-700"
               }`}
             >
-              {order.status === "PAID" ? "PAID" : "PENDING"}
+              {order.paymentStatus === "PAID" ? "PAID" : "PENDING"}
             </span>
+            {order.paymentMethod === "BKASH" && order.bkashTrxId && (
+              <p className="mt-2 text-xs text-slate-500">
+                TrxID: {order.bkashTrxId}
+                {order.bkashSenderNumber ? ` · ${order.bkashSenderNumber}` : ""}
+              </p>
+            )}
           </div>
         </div>
       </div>

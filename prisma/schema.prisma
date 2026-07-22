@@ -171,7 +171,9 @@ model Address {
 }
 
 // ─── Order ───────────────────────────────────────────────────
-// status: PENDING | PAID | PROCESSING | SHIPPED | DELIVERED | CANCELLED
+// status (fulfillment): PENDING | PROCESSING | SHIPPED | DELIVERED | CANCELLED | PAID (legacy)
+// paymentStatus: PENDING | PAID
+// paymentMethod: COD | BKASH | SSLCOMMERZ
 
 model Order {
   id                 String    @id @default(cuid())
@@ -179,6 +181,7 @@ model Order {
   userId             String
   addressId          String?
   status             String    @default("PENDING")
+  paymentStatus      String    @default("PENDING")
   subtotal           Decimal
   shipping           Decimal   @default(0)
   tax                Decimal   @default(0)
@@ -188,7 +191,10 @@ model Order {
   // ── Checkout metadata ────────────────────────────
   deliveryOption     String?   // STANDARD | EXPRESS
   installationOption String?   // SELF | SCHEDULED
-  paymentMethod      String?   // COD | SSLCOMMERZ
+  paymentMethod      String?   // COD | BKASH | SSLCOMMERZ
+  // ── Manual bKash ─────────────────────────────────
+  bkashSenderNumber  String?
+  bkashTrxId         String?
   // ── Payment gateway idempotency key ──────────────
   transactionRef     String?   @unique
   createdAt          DateTime  @default(now())

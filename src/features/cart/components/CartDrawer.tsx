@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag, X } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
@@ -22,6 +23,7 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ initialSummary }: CartDrawerProps) {
+  const { isSignedIn } = useAuth();
   const { drawerOpen, closeDrawer, totalQty } = useCart();
   const [summary, setSummary] = useState<CartSummary>(initialSummary);
   const [isFetching, startFetch] = useTransition();
@@ -157,9 +159,17 @@ export function CartDrawer({ initialSummary }: CartDrawerProps) {
                   </div>
                 </div>
 
-                <Link href="/checkout" onClick={closeDrawer} className="block">
+                <Link
+                  href={
+                    isSignedIn
+                      ? "/checkout"
+                      : "/sign-in?redirect_url=/checkout"
+                  }
+                  onClick={closeDrawer}
+                  className="block"
+                >
                   <Button size="lg" className="w-full">
-                    Proceed to Checkout
+                    {isSignedIn ? "Proceed to Checkout" : "Sign in to Checkout"}
                   </Button>
                 </Link>
                 <button

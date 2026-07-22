@@ -161,11 +161,65 @@ export default async function AdminOrderDetailPage({
                 <span>Total</span>
                 <span>{formatMoney(order.total)}</span>
               </div>
-              <div className="pt-2 text-xs text-slate-500">
-                <p>Method: {order.paymentMethod ?? "—"}</p>
-                {order.transactionRef && <p>Txn: {order.transactionRef}</p>}
-                <p>Delivery: {order.deliveryOption ?? "—"}</p>
-                <p>Installation: {order.installationOption ?? "—"}</p>
+              <div className="space-y-2 border-t border-slate-100 pt-3 text-sm">
+                <div className="flex justify-between gap-3">
+                  <span className="text-slate-500">Method</span>
+                  <span className="font-semibold text-slate-900">
+                    {order.paymentMethod === "COD"
+                      ? "Cash on Delivery"
+                      : order.paymentMethod === "BKASH"
+                        ? "bKash"
+                        : order.paymentMethod ?? "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-slate-500">Payment status</span>
+                  <span
+                    className={
+                      order.paymentStatus === "PAID"
+                        ? "font-semibold text-emerald-700"
+                        : "font-semibold text-amber-700"
+                    }
+                  >
+                    {order.paymentStatus ?? "PENDING"}
+                  </span>
+                </div>
+
+                {order.paymentMethod === "BKASH" && (
+                  <div className="mt-2 rounded-lg border border-pink-100 bg-[#fff5f9] p-3 text-sm">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#E2136E]">
+                      bKash verification
+                    </p>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between gap-3">
+                        <span className="text-slate-500">Sender number</span>
+                        <span className="font-mono font-semibold text-slate-900">
+                          {order.bkashSenderNumber ?? "—"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <span className="text-slate-500">TrxID</span>
+                        <span className="break-all font-mono font-semibold text-slate-900">
+                          {order.bkashTrxId ?? "—"}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-[11px] leading-5 text-slate-500">
+                      Open bKash app / statement and match this TrxID + sender
+                      number before moving status to Processing.
+                    </p>
+                  </div>
+                )}
+
+                <div className="pt-1 text-xs text-slate-500">
+                  <p>Delivery: {order.deliveryOption ?? "—"}</p>
+                  <p>Installation: {order.installationOption ?? "—"}</p>
+                  {order.transactionRef && (
+                    <p className="mt-1 break-all text-[11px] text-slate-400">
+                      Internal ref: {order.transactionRef}
+                    </p>
+                  )}
+                </div>
               </div>
               {order.notes && (
                 <pre className="mt-3 whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-xs text-slate-600">

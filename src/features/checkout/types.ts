@@ -2,7 +2,8 @@
 
 export type DeliveryOption = "STANDARD" | "EXPRESS";
 export type InstallationOption = "SELF" | "SCHEDULED";
-export type PaymentMethod = "COD" | "SSLCOMMERZ";
+export type PaymentMethod = "COD" | "BKASH" | "SSLCOMMERZ";
+export type PaymentStatus = "PENDING" | "PAID";
 export type OrderStatus =
   | "PENDING"
   | "PAID"
@@ -35,6 +36,7 @@ export interface OrderSummaryDTO {
   id: string;
   orderNumber: string;
   status: OrderStatus;
+  paymentStatus: PaymentStatus;
   subtotal: number;
   shipping: number;
   tax: number;
@@ -42,18 +44,12 @@ export interface OrderSummaryDTO {
   paymentMethod: PaymentMethod | null;
   deliveryOption: DeliveryOption | null;
   installationOption: InstallationOption | null;
+  bkashSenderNumber: string | null;
+  bkashTrxId: string | null;
   paidAt: string | null;
   createdAt: string;
   items: OrderLineDTO[];
   address: CheckoutAddress | null;
-}
-
-export interface CreateOrderInput {
-  address: CheckoutAddress;
-  deliveryOption: DeliveryOption;
-  installationOption: InstallationOption;
-  paymentMethod: PaymentMethod;
-  notes?: string;
 }
 
 export type CreateOrderResult =

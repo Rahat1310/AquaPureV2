@@ -182,24 +182,34 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
           <div className="flex items-center gap-2">
             <Package className="size-4 text-slate-500" />
             <p className="text-sm font-semibold text-slate-700">
-              Payment: {order.paymentMethod === "COD" ? "Cash on Delivery" : order.paymentMethod ?? "—"}
+              Payment:{" "}
+              {order.paymentMethod === "COD"
+                ? "Cash on Delivery"
+                : order.paymentMethod === "BKASH"
+                  ? "bKash"
+                  : order.paymentMethod ?? "—"}
             </p>
             <span
               className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                order.status === "PAID"
+                order.paymentStatus === "PAID" || order.status === "PAID"
                   ? "bg-emerald-100 text-emerald-700"
                   : "bg-amber-100 text-amber-700"
               }`}
             >
-              {order.status === "PAID" ? "PAID" : "AWAITING PAYMENT"}
+              {order.paymentStatus === "PAID" || order.status === "PAID"
+                ? "PAID"
+                : "PAYMENT PENDING"}
             </span>
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex flex-wrap gap-3">
-          <Link href={`/orders/${order.id}`} className={buttonVariants()}>
+          <Link href="/track-order" className={buttonVariants()}>
             Track Order
+          </Link>
+          <Link href={`/orders/${order.id}`} className={buttonVariants({ variant: "outline" })}>
+            Order details
           </Link>
           <Link href="/" className={buttonVariants({ variant: "outline" })}>
             Continue Shopping

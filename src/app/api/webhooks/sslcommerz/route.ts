@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
 
   const updatedOrder = await prisma.order.update({
     where: { id: orderRef.id },
-    data: { status: "PAID", paidAt: new Date() },
+    data: { status: "PAID", paymentStatus: "PAID", paidAt: new Date() },
     include: {
       orderItems: {
         include: {
@@ -123,6 +123,7 @@ export async function POST(req: NextRequest) {
       id: updatedOrder.id,
       orderNumber: updatedOrder.orderNumber,
       status: "PAID",
+      paymentStatus: "PAID",
       subtotal: Number(updatedOrder.subtotal),
       shipping: Number(updatedOrder.shipping),
       tax: Number(updatedOrder.tax),
@@ -130,6 +131,8 @@ export async function POST(req: NextRequest) {
       paymentMethod: (updatedOrder.paymentMethod ?? null) as OrderSummaryDTO["paymentMethod"],
       deliveryOption: (updatedOrder.deliveryOption ?? null) as OrderSummaryDTO["deliveryOption"],
       installationOption: (updatedOrder.installationOption ?? null) as OrderSummaryDTO["installationOption"],
+      bkashSenderNumber: updatedOrder.bkashSenderNumber ?? null,
+      bkashTrxId: updatedOrder.bkashTrxId ?? null,
       paidAt: updatedOrder.paidAt?.toISOString() ?? null,
       createdAt: updatedOrder.createdAt.toISOString(),
       address: updatedOrder.address

@@ -5,31 +5,33 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   CheckCircle2,
   ChevronRight,
-  CreditCard,
   Landmark,
   Lock,
   MapPin,
-  Package,
+  Smartphone,
+  Wallet,
 } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { createOrder } from "@/features/checkout/actions";
 import { AddressForm } from "./AddressForm";
-import { DeliveryOptions } from "./DeliveryOptions";
 import { OrderSummary } from "./OrderSummary";
 
 import type { CartSummary } from "@/features/cart/types";
 import type { AddressInput } from "@/features/checkout/schema";
-import type { DeliveryOption, InstallationOption, PaymentMethod } from "@/features/checkout/types";
+import type { PaymentMethod } from "@/features/checkout/types";
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2;
 
 const STEPS = [
-  { id: 1, label: "Address", icon: MapPin },
-  { id: 2, label: "Delivery", icon: Package },
-  { id: 3, label: "Review", icon: CreditCard },
+  { id: 1, label: "Shipping", icon: MapPin },
+  { id: 2, label: "Payment", icon: Wallet },
 ];
+
+const BKASH_NUMBER =
+  process.env.NEXT_PUBLIC_BKASH_NUMBER?.trim() || "01XXXXXXXXX";
 
 interface CheckoutFlowProps {
   cart: CartSummary;
@@ -39,9 +41,9 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [address, setAddress] = useState<AddressInput | null>(null);
-  const [deliveryOption, setDeliveryOption] = useState<DeliveryOption>("STANDARD");
-  const [installationOption, setInstallationOption] = useState<InstallationOption>("SELF");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("COD");
+  const [bkashSenderNumber, setBkashSenderNumber] = useState("");
+  const [bkashTrxId, setBkashTrxId] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -57,9 +59,11 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
     startTransition(async () => {
       const result = await createOrder({
         address,
-        deliveryOption,
-        installationOption,
+        deliveryOption: "STANDARD",
+        installationOption: "SELF",
         paymentMethod,
+        bkashSenderNumber,
+        bkashTrxId,
       });
 
       if (result.ok) {
@@ -72,7 +76,6 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
 
   return (
     <div className="mx-auto max-w-5xl">
-      {/* Step indicator */}
       <nav aria-label="Checkout steps" className="mb-8 flex items-center gap-0">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
@@ -90,21 +93,21 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
                         : "border-slate-200 bg-white text-slate-400"
                   }`}
                 >
-                  {isDone ? (
-                    <CheckCircle2 className="size-5" />
-                  ) : (
-                    <Icon className="size-4.5" />
-                  )}
+                  {isDone ? <CheckCircle2 className="size-5" /> : <Icon className="size-4.5" />}
                 </div>
                 <span
-                  className={`text-xs font-semibold ${isActive ? "text-primary" : isDone ? "text-slate-700" : "text-slate-400"}`}
+                  className={`text-xs font-semibold ${
+                    isActive ? "text-primary" : isDone ? "text-slate-700" : "text-slate-400"
+                  }`}
                 >
                   {s.label}
                 </span>
               </div>
               {i < STEPS.length - 1 && (
                 <div
-                  className={`h-0.5 flex-1 self-start mt-5 transition-colors ${step > s.id ? "bg-primary" : "bg-slate-200"}`}
+                  className={`mt-5 h-0.5 flex-1 self-start transition-colors ${
+                    step > s.id ? "bg-primary" : "bg-slate-200"
+                  }`}
                 />
               )}
             </div>
@@ -113,10 +116,8 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
-        {/* Main content */}
         <div>
           <AnimatePresence mode="wait">
-            {/* ── Step 1: Address ─────────────────────────────────────────── */}
             {step === 1 && (
               <motion.div
                 key="step-1"
@@ -126,7 +127,7 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
                 transition={{ duration: 0.2 }}
               >
                 <h2 className="mb-6 text-xl font-extrabold tracking-tight text-slate-900">
-                  Delivery Address
+                  Shipping details
                 </h2>
                 <AddressForm
                   formId="step1-form"
@@ -134,20 +135,13 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
                   onSubmit={handleAddressSubmit}
                 />
                 <div className="mt-6">
-                  <Button
-                    type="submit"
-                    form="step1-form"
-                    size="lg"
-                    className="w-full sm:w-auto"
-                    id="next-to-delivery"
-                  >
-                    Continue to Delivery <ChevronRight className="ml-1 size-4" />
+                  <Button type="submit" form="step1-form" size="lg" className="w-full sm:w-auto">
+                    Continue to Payment <ChevronRight className="ml-1 size-4" />
                   </Button>
                 </div>
               </motion.div>
             )}
 
-            {/* ── Step 2: Delivery ─────────────────────────────────────────── */}
             {step === 2 && (
               <motion.div
                 key="step-2"
@@ -157,48 +151,9 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
                 transition={{ duration: 0.2 }}
               >
                 <h2 className="mb-6 text-xl font-extrabold tracking-tight text-slate-900">
-                  Delivery & Installation
-                </h2>
-                <DeliveryOptions
-                  deliveryOption={deliveryOption}
-                  installationOption={installationOption}
-                  onDeliveryChange={setDeliveryOption}
-                  onInstallationChange={setInstallationOption}
-                />
-                <div className="mt-6 flex gap-3">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => setStep(1)}
-                    id="back-to-address"
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    size="lg"
-                    onClick={() => setStep(3)}
-                    id="next-to-review"
-                  >
-                    Review Order <ChevronRight className="ml-1 size-4" />
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── Step 3: Review & Payment ─────────────────────────────────── */}
-            {step === 3 && (
-              <motion.div
-                key="step-3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-              >
-                <h2 className="mb-6 text-xl font-extrabold tracking-tight text-slate-900">
-                  Review & Payment
+                  Payment method
                 </h2>
 
-                {/* Address recap */}
                 {address && (
                   <div className="mb-6 rounded-2xl border border-blue-100 bg-[#f8faff] p-5">
                     <div className="mb-2 flex items-center justify-between">
@@ -215,65 +170,113 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
                     </div>
                     <p className="text-sm font-bold text-slate-900">{address.recipientName}</p>
                     <p className="text-sm text-slate-600">
-                      {address.line1}{address.line2 ? `, ${address.line2}` : ""},{" "}
-                      {address.city}, {address.district}
+                      {address.line1}
+                      {address.line2 ? `, ${address.line2}` : ""}, {address.city},{" "}
+                      {address.district}
                     </p>
                     <p className="text-sm text-slate-600">{address.phone}</p>
                   </div>
                 )}
 
-                {/* Payment method */}
-                <div className="mb-6">
-                  <p className="mb-3 text-sm font-bold text-slate-900">Payment Method</p>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {/* Cash on Delivery */}
-                    <button
-                      type="button"
-                      id="payment-cod"
-                      onClick={() => setPaymentMethod("COD")}
-                      className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all ${
+                <div className="mb-6 grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("COD")}
+                    className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all ${
+                      paymentMethod === "COD"
+                        ? "border-primary bg-secondary/50 shadow-[0_0_0_4px_rgba(27,79,209,0.08)]"
+                        : "border-border bg-white hover:border-primary/30"
+                    }`}
+                  >
+                    <span
+                      className={`grid size-9 shrink-0 place-items-center rounded-xl ${
                         paymentMethod === "COD"
-                          ? "border-primary bg-secondary/50 shadow-[0_0_0_4px_rgba(27,79,209,0.08)]"
-                          : "border-border bg-white hover:border-primary/30"
+                          ? "bg-primary text-white"
+                          : "bg-slate-100 text-slate-500"
                       }`}
                     >
-                      <span
-                        className={`grid size-9 shrink-0 place-items-center rounded-xl ${
-                          paymentMethod === "COD"
-                            ? "bg-primary text-white"
-                            : "bg-slate-100 text-slate-500"
-                        }`}
-                      >
-                        <Landmark className="size-4.5" />
+                      <Landmark className="size-4.5" />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-bold text-slate-900">
+                        Cash on Delivery
                       </span>
-                      <span>
-                        <span className="block text-sm font-bold text-slate-900">
-                          Cash on Delivery
-                        </span>
-                        <span className="text-xs text-slate-500">Pay when you receive</span>
+                      <span className="text-xs text-slate-500">
+                        + BDT 100 delivery · pay on receive
                       </span>
-                    </button>
+                    </span>
+                  </button>
 
-                    {/* SSLCommerz — stub, coming soon */}
-                    <div
-                      className="relative flex items-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 opacity-60"
-                      title="Coming soon"
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("BKASH")}
+                    className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all ${
+                      paymentMethod === "BKASH"
+                        ? "border-primary bg-secondary/50 shadow-[0_0_0_4px_rgba(27,79,209,0.08)]"
+                        : "border-border bg-white hover:border-primary/30"
+                    }`}
+                  >
+                    <span
+                      className={`grid size-9 shrink-0 place-items-center rounded-xl ${
+                        paymentMethod === "BKASH"
+                          ? "bg-[#E2136E] text-white"
+                          : "bg-slate-100 text-slate-500"
+                      }`}
                     >
-                      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-400">
-                        <CreditCard className="size-4.5" />
+                      <Smartphone className="size-4.5" />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-bold text-slate-900">bKash</span>
+                      <span className="text-xs text-slate-500">
+                        Full payment · free delivery
                       </span>
-                      <span>
-                        <span className="block text-sm font-bold text-slate-500">
-                          SSLCommerz
-                        </span>
-                        <span className="text-xs text-slate-400">Credit / Debit / Mobile Banking</span>
-                      </span>
-                      <span className="absolute right-3 top-3 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                        Coming Soon
-                      </span>
+                    </span>
+                  </button>
+                </div>
+
+                {paymentMethod === "BKASH" && (
+                  <div className="mb-6 space-y-4 rounded-2xl border border-pink-100 bg-gradient-to-br from-[#fff5f9] to-white p-5">
+                    <div className="rounded-xl border border-pink-100/80 bg-white/80 p-4 text-sm leading-7 text-slate-700">
+                      <p className="mb-2 font-bold text-[#E2136E]">বিকাশ পেমেন্ট নির্দেশনা</p>
+                      <p>
+                        আমাদের বিকাশ মার্চেন্ট বা পার্সোনাল নাম্বারে{" "}
+                        <span className="font-extrabold text-slate-900">({BKASH_NUMBER})</span>{" "}
+                        টাকা <strong>Send Money</strong> করুন। এরপর আপনার বিকাশ নাম্বার এবং
+                        ট্রানজেকশন আইডি (TrxID) নিচের বক্সে দিন।
+                      </p>
+                    </div>
+
+                    <div>
+                      <label
+                        className="mb-1.5 block text-sm font-semibold text-slate-700"
+                        htmlFor="bkash-sender"
+                      >
+                        আপনার বিকাশ নাম্বার *
+                      </label>
+                      <Input
+                        id="bkash-sender"
+                        value={bkashSenderNumber}
+                        onChange={(e) => setBkashSenderNumber(e.target.value)}
+                        placeholder="01XXXXXXXXX"
+                        inputMode="numeric"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        className="mb-1.5 block text-sm font-semibold text-slate-700"
+                        htmlFor="bkash-trx"
+                      >
+                        ট্রানজেকশন আইডি (TrxID) *
+                      </label>
+                      <Input
+                        id="bkash-trx"
+                        value={bkashTrxId}
+                        onChange={(e) => setBkashTrxId(e.target.value)}
+                        placeholder="e.g. 8N7A2XXXXX"
+                      />
                     </div>
                   </div>
-                </div>
+                )}
 
                 {serverError && (
                   <div className="mb-4 rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
@@ -285,9 +288,8 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
                   <Button
                     variant="outline"
                     size="lg"
-                    onClick={() => setStep(2)}
+                    onClick={() => setStep(1)}
                     disabled={isPending}
-                    id="back-to-delivery"
                   >
                     Back
                   </Button>
@@ -296,7 +298,6 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
                     onClick={handlePlaceOrder}
                     disabled={isPending}
                     className="flex-1"
-                    id="place-order-btn"
                   >
                     {isPending ? (
                       "Placing Order…"
@@ -308,19 +309,13 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
                     )}
                   </Button>
                 </div>
-
-                <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
-                  <Lock className="size-3" />
-                  Your order is secured and encrypted.
-                </p>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Sidebar: order summary */}
         <div>
-          <OrderSummary cart={cart} deliveryOption={deliveryOption} />
+          <OrderSummary cart={cart} paymentMethod={paymentMethod} />
         </div>
       </div>
     </div>

@@ -83,6 +83,8 @@ function toDTO(order: NonNullable<PrismaOrderWithIncludes>): OrderSummaryDTO {
     id: order.id,
     orderNumber: order.orderNumber,
     status: order.status as OrderStatus,
+    paymentStatus: ((order as { paymentStatus?: string }).paymentStatus ??
+      (order.status === "PAID" ? "PAID" : "PENDING")) as OrderSummaryDTO["paymentStatus"],
     subtotal: toNum(order.subtotal),
     shipping: toNum(order.shipping),
     tax: toNum(order.tax),
@@ -90,6 +92,8 @@ function toDTO(order: NonNullable<PrismaOrderWithIncludes>): OrderSummaryDTO {
     paymentMethod: (order.paymentMethod ?? null) as OrderSummaryDTO["paymentMethod"],
     deliveryOption: (order.deliveryOption ?? null) as OrderSummaryDTO["deliveryOption"],
     installationOption: (order.installationOption ?? null) as OrderSummaryDTO["installationOption"],
+    bkashSenderNumber: (order as { bkashSenderNumber?: string | null }).bkashSenderNumber ?? null,
+    bkashTrxId: (order as { bkashTrxId?: string | null }).bkashTrxId ?? null,
     paidAt: order.paidAt?.toISOString() ?? null,
     createdAt: order.createdAt.toISOString(),
     address: order.address

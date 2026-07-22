@@ -2,37 +2,34 @@ import { SignIn } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AuthShell } from "@/components/shared/AuthShell";
+import { clerkAppearance } from "@/lib/clerk-appearance";
+
 export const metadata: Metadata = {
   title: "Sign In — Padma Mineral Water",
 };
 
 export default function SignInPage() {
   return (
-    <main className="flex min-h-[70vh] items-center justify-center bg-gradient-to-b from-[#eef5ff] to-white px-4 py-16">
-      <div className="flex flex-col items-center gap-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
-            Sign in to PMW
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Welcome to Padma Mineral Water. Customers can create an account.
-            Staff use the admin invite link.
-          </p>
-        </div>
-        <SignIn
-          routing="path"
-          path="/sign-in"
-          signUpUrl="/sign-up"
-          fallbackRedirectUrl="/account"
-          forceRedirectUrl="/account"
-        />
-        <p className="text-center text-sm text-slate-500">
+    <AuthShell
+      title="Welcome back"
+      subtitle="Sign in to manage orders, wishlist, and your account."
+      footer={
+        <>
           Staff?{" "}
-          <Link href="/admin/sign-in" className="font-semibold text-primary hover:underline">
+          <Link href="/admin/login" className="font-semibold text-primary hover:underline">
             Admin sign in →
           </Link>
-        </p>
-      </div>
-    </main>
+        </>
+      }
+    >
+      <SignIn
+        routing="path"
+        path="/sign-in"
+        signUpUrl="/sign-up"
+        fallbackRedirectUrl="/account"
+        appearance={clerkAppearance}
+      />
+    </AuthShell>
   );
 }

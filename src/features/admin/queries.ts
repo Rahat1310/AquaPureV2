@@ -278,6 +278,8 @@ export async function listOrders(filters: unknown = {}) {
       { user: { email: { contains: term, mode: "insensitive" } } },
       { user: { name: { contains: term, mode: "insensitive" } } },
       { transactionRef: { contains: term, mode: "insensitive" } },
+      { bkashTrxId: { contains: term, mode: "insensitive" } },
+      { bkashSenderNumber: { contains: term, mode: "insensitive" } },
     ];
   }
 
@@ -370,6 +372,9 @@ export async function getOrderAdmin(id: string) {
     deliveryOption: order.deliveryOption,
     installationOption: order.installationOption,
     paymentMethod: order.paymentMethod,
+    paymentStatus: order.paymentStatus,
+    bkashSenderNumber: order.bkashSenderNumber,
+    bkashTrxId: order.bkashTrxId,
     transactionRef: order.transactionRef,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,

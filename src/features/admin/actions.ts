@@ -140,15 +140,25 @@ export async function updateOrderStatus(input: unknown): Promise<ActionResult> {
 
   const orderBefore = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { status: true },
+    select: { status: true, paymentStatus: true, paymentMethod: true },
   });
 
   if (!orderBefore) return { ok: false, error: "Order not found." };
 
+  // Fulfillment past Pending implies payment accepted (COD collected / bKash verified).
+  const marksPaid = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"].includes(status);
+
   const orderAfter = await prisma.order.update({
     where: { id: orderId },
-    data: { status },
-    select: { status: true },
+    data: {
+      status,
+      ...(marksPaid
+        ? { paymentStatus: "PAID", paidAt: new Date() }
+        : status === "PENDING"
+          ? { paymentStatus: "PENDING", paidAt: null }
+          : {}),
+    },
+    select: { status: true, paymentStatus: true, paidAt: true },
   });
 
   await writeAuditLog({

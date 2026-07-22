@@ -1,7 +1,11 @@
 "use client";
 
 import type { CartSummary } from "@/features/cart/types";
-import type { DeliveryOption } from "@/features/checkout/types";
+import {
+  BKASH_DELIVERY_CHARGE,
+  COD_DELIVERY_CHARGE,
+} from "@/features/checkout/schema";
+import type { PaymentMethod } from "@/features/checkout/types";
 
 const BDT = new Intl.NumberFormat("en-BD", {
   style: "currency",
@@ -9,18 +13,14 @@ const BDT = new Intl.NumberFormat("en-BD", {
   maximumFractionDigits: 0,
 });
 
-const SHIPPING_RATES: Record<DeliveryOption, number> = {
-  STANDARD: 0,
-  EXPRESS: 299,
-};
-
 interface OrderSummaryProps {
   cart: CartSummary;
-  deliveryOption: DeliveryOption;
+  paymentMethod: PaymentMethod;
 }
 
-export function OrderSummary({ cart, deliveryOption }: OrderSummaryProps) {
-  const shipping = SHIPPING_RATES[deliveryOption];
+export function OrderSummary({ cart, paymentMethod }: OrderSummaryProps) {
+  const shipping =
+    paymentMethod === "COD" ? COD_DELIVERY_CHARGE : BKASH_DELIVERY_CHARGE;
   const total = cart.subtotal + shipping;
 
   return (
@@ -29,7 +29,6 @@ export function OrderSummary({ cart, deliveryOption }: OrderSummaryProps) {
         Order Summary
       </h3>
 
-      {/* Items */}
       <div className="space-y-3">
         {cart.items.map((item) => (
           <div key={item.key} className="flex items-start gap-3">
@@ -37,9 +36,7 @@ export function OrderSummary({ cart, deliveryOption }: OrderSummaryProps) {
               {item.qty}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-slate-900">
-                {item.name}
-              </p>
+              <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
               {item.variantName && (
                 <p className="text-xs text-slate-500">{item.variantName}</p>
               )}
@@ -51,15 +48,20 @@ export function OrderSummary({ cart, deliveryOption }: OrderSummaryProps) {
         ))}
       </div>
 
-      {/* Totals */}
       <div className="mt-5 space-y-2 border-t border-blue-50 pt-4">
         <div className="flex items-center justify-between text-sm text-slate-600">
           <span>Subtotal</span>
           <span className="font-semibold">{BDT.format(cart.subtotal)}</span>
         </div>
         <div className="flex items-center justify-between text-sm text-slate-600">
-          <span>Shipping ({deliveryOption === "EXPRESS" ? "Express" : "Standard"})</span>
-          <span className={shipping === 0 ? "font-semibold text-emerald-600" : "font-semibold"}>
+          <span>
+            {paymentMethod === "COD" ? "Delivery (COD)" : "Delivery (bKash)"}
+          </span>
+          <span
+            className={
+              shipping === 0 ? "font-semibold text-emerald-600" : "font-semibold"
+            }
+          >
             {shipping === 0 ? "Free" : BDT.format(shipping)}
           </span>
         </div>
