@@ -1,18 +1,39 @@
 import { z } from "zod";
 
+/** BD mobile: 01XXXXXXXXX (11 digits). */
+const bdPhoneRegex = /^01[3-9]\d{8}$/;
+
 // ─── Address ─────────────────────────────────────────────────────────────────
 
 export const addressSchema = z.object({
-  recipientName: z.string().min(2, "Full name is required."),
+  recipientName: z
+    .string()
+    .trim()
+    .min(2, "Full name is required.")
+    .max(80, "Name is too long."),
   phone: z
     .string()
-    .min(7, "Enter a valid phone number.")
-    .max(20, "Phone number is too long."),
-  line1: z.string().min(5, "Shipping address is required."),
-  line2: z.string().max(120).optional().or(z.literal("")),
-  city: z.string().min(2, "City is required."),
-  district: z.string().min(2, "District is required."),
-  postCode: z.string().max(10).optional().or(z.literal("")),
+    .trim()
+    .regex(bdPhoneRegex, "Enter a valid BD mobile (01XXXXXXXXX)."),
+  line1: z
+    .string()
+    .trim()
+    .min(5, "Shipping address is required.")
+    .max(200, "Address is too long."),
+  line2: z
+    .string()
+    .trim()
+    .max(120, "Address line 2 is too long.")
+    .optional()
+    .or(z.literal("")),
+  city: z.string().trim().min(2, "City is required.").max(60),
+  district: z.string().trim().min(2, "District is required.").max(60),
+  postCode: z
+    .string()
+    .trim()
+    .max(10)
+    .optional()
+    .or(z.literal("")),
 });
 
 export type AddressInput = z.infer<typeof addressSchema>;
@@ -24,26 +45,46 @@ export const createOrderSchema = z
     address: addressSchema,
     deliveryOption: z.enum(["STANDARD", "EXPRESS"]).default("STANDARD"),
     installationOption: z.enum(["SELF", "SCHEDULED"]).default("SELF"),
-    paymentMethod: z.enum(["COD", "BKASH"]).default("COD"),
-    bkashSenderNumber: z.string().max(20).optional().or(z.literal("")),
-    bkashTrxId: z.string().max(40).optional().or(z.literal("")),
-    notes: z.string().max(500).optional().or(z.literal("")),
+    paymentMethod: z.enum(["COD", "BKASH"]),
+    bkashSenderNumber: z
+      .string()
+      .trim()
+      .max(20)
+      .optional()
+      .or(z.literal("")),
+    bkashTrxId: z
+      .string()
+      .trim()
+      .max(40)
+      .optional()
+      .or(z.literal("")),
+    notes: z.string().trim().max(500).optional().or(z.literal("")),
   })
   .superRefine((data, ctx) => {
     if (data.paymentMethod !== "BKASH") return;
 
-    if (!data.bkashSenderNumber || data.bkashSenderNumber.trim().length < 11) {
+    const sender = data.bkashSenderNumber?.trim() ?? "";
+    const trx = data.bkashTrxId?.trim() ?? "";
+
+    if (!bdPhoneRegex.test(sender)) {
       ctx.addIssue({
         code: "custom",
         path: ["bkashSenderNumber"],
-        message: "বিকাশ নাম্বার দিন (১১ ডিজিট)।",
+        message: "বিকাশ নাম্বার দিন (১১ ডিজিট, 01XXXXXXXXX)।",
       });
     }
-    if (!data.bkashTrxId || data.bkashTrxId.trim().length < 6) {
+
+    if (trx.length < 6) {
       ctx.addIssue({
         code: "custom",
         path: ["bkashTrxId"],
         message: "ট্রানজেকশন আইডি (TrxID) দিন।",
+      });
+    } else if (!/^[A-Za-z0-9_-]+$/.test(trx)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["bkashTrxId"],
+        message: "TrxID শুধু অক্ষর/সংখ্যা হতে পারে।",
       });
     }
   });

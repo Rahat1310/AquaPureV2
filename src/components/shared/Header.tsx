@@ -39,6 +39,8 @@ type NavItem = {
   label: string;
   href: string;
   groups?: NavGroup[];
+  /** Emphasized nav link (e.g. All Products) */
+  highlight?: boolean;
 };
 
 /**
@@ -48,9 +50,10 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     label: "Family",
-    href: "/category/residential",
+    href: "/products?segment=family",
     groups: [
-      { label: "Economy Purifier", href: "/category/economy-purifier", featured: true },
+      { label: "All Family Products", href: "/products?segment=family", featured: true },
+      { label: "Economy Purifier", href: "/category/economy-purifier" },
       { label: "RO Purifier", href: "/category/ro-purifier" },
       { label: "UV", href: "/category/uv" },
       { label: "RO + UV + UF", href: "/category/ro-uv-uf" },
@@ -61,8 +64,9 @@ const navItems: NavItem[] = [
   },
   {
     label: "Mother & Child",
-    href: "/category/mother-and-child",
+    href: "/products?segment=mother",
     groups: [
+      { label: "All Mother & Child", href: "/products?segment=mother", featured: true },
       { label: "RO UV Alkaline", href: "/category/ro-uv-alkaline" },
       { label: "Formalin Removal", href: "/category/formalin-removal" },
       { label: "Shower Filter", href: "/category/shower-filter" },
@@ -71,11 +75,24 @@ const navItems: NavItem[] = [
   },
   {
     label: "Accessories",
-    href: "/category/accessories",
+    href: "/accessories",
     groups: [
       {
+        label: "All Accessories",
+        href: "/accessories",
+        featured: true,
+      },
+      {
+        label: "Family Accessories",
+        href: "/accessories?segment=family",
+      },
+      {
+        label: "Office Accessories",
+        href: "/accessories?segment=office",
+      },
+      {
         label: "Water Purifier Accessories",
-        href: "/category/accessories",
+        href: "/accessories?segment=family",
         children: [
           { label: "P.P Filter", href: "/category/pp-filter" },
           { label: "Membrane", href: "/category/membrane" },
@@ -98,7 +115,7 @@ const navItems: NavItem[] = [
       },
       {
         label: "Installation",
-        href: "/category/accessories",
+        href: "/accessories?segment=family",
         children: [
           {
             label: "Meter",
@@ -113,8 +130,13 @@ const navItems: NavItem[] = [
   },
   {
     label: "Office / Commercial",
-    href: "/commercial-solutions",
+    href: "/products?segment=office",
     groups: [
+      {
+        label: "All Office Products",
+        href: "/products?segment=office",
+        featured: true,
+      },
       {
         label: "Commercial Solutions",
         href: "/commercial-solutions",
@@ -126,7 +148,7 @@ const navItems: NavItem[] = [
       },
       {
         label: "Commercial Accessories",
-        href: "/category/accessories",
+        href: "/accessories?segment=office",
         children: [
           { label: "Water Dispenser", href: "/category/water-dispenser" },
           { label: "Membrane", href: "/category/membrane" },
@@ -158,6 +180,11 @@ const navItems: NavItem[] = [
     ],
   },
   { label: "Contact Us", href: "/contact" },
+  {
+    label: "All Products",
+    href: "/products",
+    highlight: true,
+  },
 ];
 
 const marqueeMessages: React.ReactNode[] = [
@@ -210,16 +237,16 @@ function BrandLogo() {
   return (
     <Link
       href="/"
-      className="group shrink-0"
+      className="group relative z-20 shrink-0"
       aria-label="Padma Mineral Water home"
     >
       <Image
         src="/logo.png"
         alt="Padma Mineral Water"
-        width={200}
-        height={88}
+        width={160}
+        height={160}
         priority
-        className="h-14 w-auto object-contain transition group-hover:opacity-90 sm:h-16"
+        className="size-14 sm:size-18 object-contain transition group-hover:opacity-90"
       />
     </Link>
   );
@@ -260,18 +287,22 @@ function CascadingDropdown({
 
             if (hasChildren) {
               return (
-                <li key={group.label} role="none">
-                  <button
-                    type="button"
+                <li
+                  key={group.label}
+                  role="none"
+                  onMouseEnter={() => setFlyout(group.label)}
+                >
+                  <Link
+                    href={group.href}
                     role="menuitem"
                     className={rowClass(isActive)}
-                    onMouseEnter={() => setFlyout(group.label)}
+                    onClick={onClose}
                     aria-expanded={isActive}
                     aria-haspopup="true"
                   >
                     <span>{group.label}</span>
                     <ChevronRight className="size-3.5 shrink-0 opacity-90" />
-                  </button>
+                  </Link>
                 </li>
               );
             }
@@ -471,11 +502,11 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
 
         {/* overflow-visible so L3 flyouts are not clipped */}
         <div className="relative overflow-visible">
-          <div className="section-shell flex h-[72px] items-center gap-4 overflow-visible">
+          <div className="section-shell grid min-h-[72px] py-2 grid-cols-[auto_1fr_auto] items-center gap-3 overflow-visible">
             <BrandLogo />
 
             <nav
-              className="ml-2 hidden h-full flex-1 items-center gap-0 overflow-visible lg:flex"
+              className="hidden h-full items-center justify-center gap-0.5 overflow-visible lg:flex"
               aria-label="Main navigation"
             >
               {navItems.map((item) =>
@@ -486,28 +517,42 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
                     onMouseEnter={() => handleNavEnter(item.label)}
                     onMouseLeave={handleNavLeave}
                   >
-                    <button
-                      type="button"
+                    <div
                       className={cn(
-                        "flex h-full items-center gap-1 px-3 text-[13px] font-semibold transition",
+                        "flex h-full items-center gap-0.5 whitespace-nowrap px-2 text-[13px] font-semibold transition xl:px-2.5",
                         activeMenu === item.label
                           ? "text-[#3b82f6]"
                           : "text-slate-700 hover:text-[#3b82f6]",
                       )}
-                      onClick={() =>
-                        setActiveMenu(activeMenu === item.label ? null : item.label)
-                      }
-                      aria-expanded={activeMenu === item.label}
-                      aria-haspopup="true"
                     >
-                      {item.label}
-                      <ChevronDown
-                        className={cn(
-                          "size-3.5 text-slate-400 transition-transform",
-                          activeMenu === item.label && "rotate-180 text-[#3b82f6]",
-                        )}
-                      />
-                    </button>
+                      <Link
+                        href={item.href}
+                        className="flex h-full items-center"
+                        onClick={() => setActiveMenu(null)}
+                      >
+                        {item.label}
+                      </Link>
+                      <button
+                        type="button"
+                        className="flex h-full items-center pl-0.5"
+                        onClick={() =>
+                          setActiveMenu(
+                            activeMenu === item.label ? null : item.label,
+                          )
+                        }
+                        aria-label={`${item.label} menu`}
+                        aria-expanded={activeMenu === item.label}
+                        aria-haspopup="true"
+                      >
+                        <ChevronDown
+                          className={cn(
+                            "size-3.5 text-slate-400 transition-transform",
+                            activeMenu === item.label &&
+                              "rotate-180 text-[#3b82f6]",
+                          )}
+                        />
+                      </button>
+                    </div>
 
                     <AnimatePresence>
                       {activeMenu === item.label && (
@@ -529,11 +574,19 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
                       )}
                     </AnimatePresence>
                   </div>
+                ) : item.highlight ? (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="ml-1 inline-flex h-8 shrink-0 items-center whitespace-nowrap rounded-full bg-primary/10 px-3 text-[12px] font-extrabold tracking-wide text-primary transition hover:bg-primary hover:text-white xl:ml-1.5 xl:px-3.5"
+                  >
+                    {item.label}
+                  </Link>
                 ) : (
                   <Link
                     key={item.label}
                     href={item.href}
-                    className="flex h-full items-center px-3 text-[13px] font-semibold text-slate-700 transition hover:text-[#3b82f6]"
+                    className="flex h-full items-center whitespace-nowrap px-2 text-[13px] font-semibold text-slate-700 transition hover:text-[#3b82f6] xl:px-2.5"
                   >
                     {item.label}
                   </Link>
@@ -541,7 +594,7 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
               )}
             </nav>
 
-            <div className="ml-auto flex items-center gap-1">
+            <div className="flex items-center justify-end gap-1">
               <Link
                 href="/account/wishlist"
                 className="hidden size-10 place-items-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-primary sm:grid"
@@ -600,25 +653,36 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
                   <div key={item.label} className="border-b border-slate-100">
                     {item.groups ? (
                       <>
-                        <button
-                          type="button"
-                          className="flex w-full items-center justify-between py-3.5 text-sm font-semibold text-slate-800"
-                          onClick={() => {
-                            setMobileActiveMenu(
-                              mobileActiveMenu === item.label ? null : item.label,
-                            );
-                            setMobileFlyout(null);
-                          }}
-                          aria-expanded={mobileActiveMenu === item.label}
-                        >
-                          {item.label}
-                          <ChevronDown
-                            className={cn(
-                              "size-4 text-primary transition",
-                              mobileActiveMenu === item.label && "rotate-180",
-                            )}
-                          />
-                        </button>
+                        <div className="flex w-full items-center justify-between py-3.5">
+                          <Link
+                            href={item.href}
+                            onClick={() => setMobileOpen(false)}
+                            className="text-sm font-semibold text-slate-800"
+                          >
+                            {item.label}
+                          </Link>
+                          <button
+                            type="button"
+                            className="grid size-8 place-items-center rounded-lg text-primary"
+                            onClick={() => {
+                              setMobileActiveMenu(
+                                mobileActiveMenu === item.label
+                                  ? null
+                                  : item.label,
+                              );
+                              setMobileFlyout(null);
+                            }}
+                            aria-label={`${item.label} submenu`}
+                            aria-expanded={mobileActiveMenu === item.label}
+                          >
+                            <ChevronDown
+                              className={cn(
+                                "size-4 transition",
+                                mobileActiveMenu === item.label && "rotate-180",
+                              )}
+                            />
+                          </button>
+                        </div>
                         {mobileActiveMenu === item.label && (
                           <ul className="space-y-0.5 pb-3">
                             {item.groups.map((group) => (
@@ -698,7 +762,12 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
                       <Link
                         href={item.href}
                         onClick={() => setMobileOpen(false)}
-                        className="flex py-3.5 text-sm font-semibold text-slate-800"
+                        className={cn(
+                          "flex text-sm font-semibold",
+                          item.highlight
+                            ? "mt-2 items-center justify-center whitespace-nowrap rounded-full bg-primary/10 px-4 py-2.5 text-center font-extrabold tracking-wide text-primary"
+                            : "py-3.5 text-slate-800",
+                        )}
                       >
                         {item.label}
                       </Link>

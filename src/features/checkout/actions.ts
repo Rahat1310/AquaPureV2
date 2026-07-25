@@ -1,20 +1,29 @@
 "use server";
 
 import { randomUUID } from "crypto";
+import { after } from "next/server";
+import { headers } from "next/headers";
 
 import { auth } from "@/auth";
 import { clearCart } from "@/features/cart/actions";
 import { getCartSummary } from "@/features/cart/queries";
 import { renderOrderConfirmationEmail } from "@/features/checkout/emails/OrderConfirmationEmail";
 import {
+  cancelUserOrder,
+  createOrderRecord,
+  getUserOrderDetail,
+} from "@/features/checkout/order-repository";
+import {
   BKASH_DELIVERY_CHARGE,
   COD_DELIVERY_CHARGE,
   createOrderSchema,
 } from "@/features/checkout/schema";
-import type { CreateOrderResult, OrderSummaryDTO } from "@/features/checkout/types";
+import type { CreateOrderResult } from "@/features/checkout/types";
 import { logAudit } from "@/lib/audit-log";
+import { AppDbError, toUserFacingDbError } from "@/lib/db-errors";
 import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { checkoutRatelimit, enforceRateLimit } from "@/lib/ratelimit";
 
 function generateOrderNumber(): string {
   const date = new Date();
@@ -23,9 +32,21 @@ function generateOrderNumber(): string {
   return `PMW-${ymd}-${rand}`;
 }
 
+function zodFieldErrors(
+  issues: { path: (string | number)[]; message: string }[],
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const issue of issues) {
+    const key = issue.path.join(".") || "_form";
+    if (!out[key]) out[key] = issue.message;
+  }
+  return out;
+}
+
 /**
- * Place order after Clerk auth. COD → 100 BDT delivery + payment Pending.
- * bKash → 0 delivery, store sender + TrxID, payment Pending until verified.
+ * Place order (Clerk-gated Server Action).
+ * Persists via `createOrderRecord` inside a Prisma `$transaction`
+ * (stock decrement + order + items are atomic).
  */
 export async function createOrder(input: unknown): Promise<CreateOrderResult> {
   const session = await auth();
@@ -35,11 +56,30 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
 
   const userId = session.user.id;
 
+  // Rate limit before any Prisma writes (userId + IP)
+  const headerStore = await headers();
+  const ip =
+    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headerStore.get("x-real-ip") ||
+    "unknown";
+  const limit = await enforceRateLimit(
+    checkoutRatelimit,
+    `checkout:${userId}:${ip}`,
+  );
+  if (!limit.success) {
+    return {
+      ok: false,
+      error: "Too many checkout requests. Please try again in a minute.",
+    };
+  }
+
   const parsed = createOrderSchema.safeParse(input);
   if (!parsed.success) {
+    const fieldErrors = zodFieldErrors(parsed.error.issues);
     return {
       ok: false,
       error: parsed.error.issues[0]?.message ?? "Invalid order data.",
+      fieldErrors,
     };
   }
 
@@ -53,172 +93,84 @@ export async function createOrder(input: unknown): Promise<CreateOrderResult> {
     notes,
   } = parsed.data;
 
-  const cart = await getCartSummary(userId);
-  if (cart.items.length === 0) {
-    return { ok: false, error: "Your cart is empty." };
-  }
-
-  const shipping =
-    paymentMethod === "COD" ? COD_DELIVERY_CHARGE : BKASH_DELIVERY_CHARGE;
-  const tax = 0;
-  const total = cart.subtotal + shipping + tax;
-  const transactionRef = randomUUID();
-  const orderNumber = generateOrderNumber();
-
   try {
-    const order = await prisma.$transaction(async (tx) => {
-      for (const item of cart.items) {
-        if (item.variantId) {
-          const variant = await tx.productVariant.findUnique({
-            where: { id: item.variantId },
-            select: { stock: true },
-          });
-          if (!variant || variant.stock < item.qty) {
-            throw new Error(
-              `"${item.name}" does not have enough stock. Available: ${variant?.stock ?? 0}`,
-            );
-          }
-        } else {
-          const product = await tx.product.findUnique({
-            where: { id: item.productId },
-            select: { stock: true },
-          });
-          if (!product || product.stock < item.qty) {
-            throw new Error(
-              `"${item.name}" does not have enough stock. Available: ${product?.stock ?? 0}`,
-            );
-          }
-        }
-      }
+    const cart = await getCartSummary(userId);
+    if (cart.items.length === 0) {
+      return { ok: false, error: "Your cart is empty." };
+    }
 
-      const addressRecord = await tx.address.create({
-        data: {
-          userId,
-          label: "Order Address",
-          recipientName: address.recipientName,
-          phone: address.phone,
-          line1: address.line1,
-          line2: address.line2 || null,
-          city: address.city,
-          district: address.district,
-          postCode: address.postCode || null,
-        },
-      });
+    const shipping =
+      paymentMethod === "COD" ? COD_DELIVERY_CHARGE : BKASH_DELIVERY_CHARGE;
+    const tax = 0;
+    const total = cart.subtotal + shipping + tax;
 
-      return tx.order.create({
-        data: {
-          orderNumber,
-          userId,
-          addressId: addressRecord.id,
-          status: "PENDING",
-          paymentStatus: "PENDING",
-          subtotal: cart.subtotal,
-          shipping,
-          tax,
-          total,
-          deliveryOption,
-          installationOption,
-          paymentMethod,
-          bkashSenderNumber:
-            paymentMethod === "BKASH" ? bkashSenderNumber?.trim() || null : null,
-          bkashTrxId: paymentMethod === "BKASH" ? bkashTrxId?.trim() || null : null,
-          notes: notes || null,
-          transactionRef,
-          orderItems: {
-            create: cart.items.map((item) => ({
-              productId: item.productId,
-              variantId: item.variantId,
-              qty: item.qty,
-              unitPrice: item.unitPrice,
-              total: item.subtotal,
-            })),
-          },
-        },
-        include: {
-          orderItems: {
-            include: {
-              product: { select: { name: true, sku: true } },
-              variant: { select: { name: true, sku: true } },
-            },
-          },
-          address: true,
-        },
-      });
-    });
-
-    await logAudit({
+    const order = await createOrderRecord({
       userId,
-      action: "CREATE_ORDER",
-      entityType: "Order",
-      entityId: order.id,
-      after: {
-        orderNumber: order.orderNumber,
-        status: order.status,
-        paymentStatus: order.paymentStatus,
-        total: order.total.toString(),
-        paymentMethod,
-      },
+      orderNumber: generateOrderNumber(),
+      transactionRef: randomUUID(),
+      address,
+      deliveryOption,
+      installationOption,
+      paymentMethod,
+      bkashSenderNumber,
+      bkashTrxId,
+      notes,
+      subtotal: cart.subtotal,
+      shipping,
+      tax,
+      total,
+      items: cart.items.map((item) => ({
+        productId: item.productId,
+        variantId: item.variantId,
+        name: item.name,
+        qty: item.qty,
+        unitPrice: item.unitPrice,
+        subtotal: item.subtotal,
+      })),
     });
 
     await clearCart(userId);
 
-    const orderSummary: OrderSummaryDTO = {
-      id: order.id,
-      orderNumber: order.orderNumber,
-      status: order.status as OrderSummaryDTO["status"],
-      paymentStatus: (order.paymentStatus ?? "PENDING") as OrderSummaryDTO["paymentStatus"],
-      subtotal: Number(order.subtotal),
-      shipping: Number(order.shipping),
-      tax: Number(order.tax),
-      total: Number(order.total),
-      paymentMethod: order.paymentMethod as OrderSummaryDTO["paymentMethod"],
-      deliveryOption: order.deliveryOption as OrderSummaryDTO["deliveryOption"],
-      installationOption:
-        order.installationOption as OrderSummaryDTO["installationOption"],
-      bkashSenderNumber: order.bkashSenderNumber,
-      bkashTrxId: order.bkashTrxId,
-      paidAt: null,
-      createdAt: order.createdAt.toISOString(),
-      address: order.address
-        ? {
-            recipientName: order.address.recipientName,
-            phone: order.address.phone,
-            line1: order.address.line1,
-            line2: order.address.line2 ?? undefined,
-            city: order.address.city,
-            district: order.address.district,
-            postCode: order.address.postCode ?? undefined,
-          }
-        : null,
-      items: order.orderItems.map((oi) => ({
-        id: oi.id,
-        name: oi.product.name,
-        variantName: oi.variant?.name ?? null,
-        sku: oi.variant?.sku ?? oi.product.sku,
-        qty: oi.qty,
-        unitPrice: Number(oi.unitPrice),
-        total: Number(oi.total),
-      })),
-    };
+    after(async () => {
+      try {
+        await logAudit({
+          userId,
+          action: "CREATE_ORDER",
+          entityType: "Order",
+          entityId: order.id,
+          after: {
+            orderNumber: order.orderNumber,
+            status: order.status,
+            paymentStatus: order.paymentStatus,
+            total: order.total.toString(),
+            paymentMethod: order.paymentMethod,
+          },
+        });
 
-    const userRecord = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true, name: true },
+        const [userRecord, orderSummary] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: userId },
+            select: { email: true },
+          }),
+          getUserOrderDetail(order.id, userId),
+        ]);
+
+        if (userRecord?.email && orderSummary) {
+          await sendEmail({
+            to: userRecord.email,
+            subject: `Order ${order.orderNumber} — Confirmed`,
+            html: renderOrderConfirmationEmail(orderSummary),
+          });
+        }
+      } catch {
+        /* side effects must not fail the placed order */
+      }
     });
-
-    if (userRecord?.email) {
-      sendEmail({
-        to: userRecord.email,
-        subject: `Order ${order.orderNumber} — Confirmed`,
-        html: renderOrderConfirmationEmail(orderSummary),
-      }).catch(() => undefined);
-    }
 
     return { ok: true, orderId: order.id, orderNumber: order.orderNumber };
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Order creation failed. Please try again.";
-    return { ok: false, error: message };
+    const mapped = toUserFacingDbError(err);
+    return { ok: false, error: mapped.message };
   }
 }
 
@@ -232,31 +184,28 @@ export async function cancelOrder(
 
   const userId = session.user.id;
 
-  const order = await prisma.order.findFirst({
-    where: { id: orderId, userId },
-    select: { id: true, status: true, orderNumber: true, total: true },
-  });
+  try {
+    const result = await cancelUserOrder(orderId, userId);
 
-  if (!order) return { ok: false, error: "Order not found." };
-  if (order.status === "PAID" || order.status === "SHIPPED" || order.status === "DELIVERED") {
-    return { ok: false, error: "This order cannot be cancelled." };
+    after(async () => {
+      try {
+        await logAudit({
+          userId,
+          action: "CANCEL_ORDER",
+          entityType: "Order",
+          entityId: result.id,
+          before: { status: result.previousStatus },
+          after: { status: "CANCELLED" },
+        });
+      } catch {
+        /* ignore */
+      }
+    });
+
+    return { ok: true };
+  } catch (err) {
+    const mapped =
+      err instanceof AppDbError ? err : toUserFacingDbError(err);
+    return { ok: false, error: mapped.message };
   }
-
-  const before = { status: order.status };
-
-  await prisma.order.update({
-    where: { id: orderId },
-    data: { status: "CANCELLED" },
-  });
-
-  await logAudit({
-    userId,
-    action: "CANCEL_ORDER",
-    entityType: "Order",
-    entityId: orderId,
-    before,
-    after: { status: "CANCELLED" },
-  });
-
-  return { ok: true };
 }

@@ -203,6 +203,15 @@ model Order {
   user       User        @relation(fields: [userId], references: [id])
   address    Address?    @relation(fields: [addressId], references: [id])
   orderItems OrderItem[]
+
+  @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([paymentMethod])
+  @@index([addressId])
+  @@index([bkashTrxId])
+  @@index([createdAt(sort: Desc)])
 }
 
 // ─── OrderItem ───────────────────────────────────────────────
@@ -219,6 +228,10 @@ model OrderItem {
   order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product         @relation(fields: [productId], references: [id])
   variant ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([variantId])
 }
 
 // ─── Review ──────────────────────────────────────────────────

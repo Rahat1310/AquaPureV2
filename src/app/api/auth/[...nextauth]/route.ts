@@ -1,13 +1,30 @@
 import { NextResponse } from "next/server";
 
-/** Auth.js removed — Clerk handles auth. */
-export function GET() {
-  return NextResponse.redirect(new URL("/sign-in", process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"));
+import { corsPreflightDenied, rejectIfCrossOrigin } from "@/lib/api-route";
+
+/**
+ * Legacy Auth.js catch-all — disabled. Clerk owns customer auth.
+ * Same-origin only; no CORS wildcard.
+ */
+
+export async function OPTIONS() {
+  return corsPreflightDenied();
 }
 
-export function POST() {
+export async function GET(request: Request) {
+  const blocked = rejectIfCrossOrigin(request);
+  if (blocked) return blocked;
+
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  return NextResponse.redirect(new URL("/sign-in", base));
+}
+
+export async function POST(request: Request) {
+  const blocked = rejectIfCrossOrigin(request);
+  if (blocked) return blocked;
+
   return NextResponse.json(
-    { error: "Auth.js disabled. Use Clerk at /sign-in." },
+    { error: "Gone." },
     { status: 410 },
   );
 }

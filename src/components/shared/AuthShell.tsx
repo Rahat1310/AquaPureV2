@@ -43,9 +43,9 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
                 src="/logo.png"
                 alt="Padma Mineral Water"
                 width={160}
-                height={50}
+                height={160}
                 priority
-                className="h-10 w-auto object-contain brightness-0 invert transition-transform duration-300 group-hover:scale-105"
+                className="size-16 object-contain brightness-0 invert transition-transform duration-300 group-hover:scale-105"
               />
             </Link>
             <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/40 bg-cyan-400/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-cyan-50 backdrop-blur-md shadow-lg shadow-cyan-900/20">
@@ -112,9 +112,9 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
                 src="/logo.png"
                 alt="Padma Mineral Water"
                 width={140}
-                height={40}
+                height={140}
                 priority
-                className="h-8 w-auto object-contain"
+                className="size-14 object-contain"
             />
             </Link>
         </div>

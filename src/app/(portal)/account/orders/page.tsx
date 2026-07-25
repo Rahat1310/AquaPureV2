@@ -7,7 +7,7 @@ import { auth } from "@/auth";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getOrdersByUser } from "@/features/checkout/queries";
+import { listUserOrders } from "@/features/checkout/queries";
 
 export const metadata: Metadata = {
   title: "Orders — Padma Mineral Water",
@@ -34,11 +34,20 @@ const STATUS_VARIANT: Record<
   CANCELLED: "sale",
 };
 
-export default async function PortalOrdersPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function PortalOrdersPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/sign-in?redirect_url=/account/orders");
 
-  const orders = await getOrdersByUser(session.user.id);
+  const raw = await searchParams;
+  const page = Math.max(1, Number(Array.isArray(raw.page) ? raw.page[0] : raw.page) || 1);
+  const { items: orders, pageCount } = await listUserOrders(session.user.id, {
+    page,
+    pageSize: 10,
+  });
 
   return (
     <div className="space-y-6">
@@ -91,8 +100,8 @@ export default async function PortalOrdersPage() {
                         year: "numeric",
                       })}
                       {" · "}
-                      {order.items.length} item
-                      {order.items.length !== 1 ? "s" : ""}
+                      {order.itemCount} item
+                      {order.itemCount !== 1 ? "s" : ""}
                     </p>
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {order.items.slice(0, 2).map((item) => (
@@ -104,9 +113,9 @@ export default async function PortalOrdersPage() {
                           {item.variantName ? ` (${item.variantName})` : ""}
                         </span>
                       ))}
-                      {order.items.length > 2 && (
+                      {order.itemCount > 2 && (
                         <span className="rounded-lg bg-slate-50 px-2 py-0.5 text-xs text-slate-500">
-                          +{order.items.length - 2} more
+                          +{order.itemCount - 2} more
                         </span>
                       )}
                     </div>
@@ -131,6 +140,30 @@ export default async function PortalOrdersPage() {
           ))}
         </ul>
       )}
+
+      {pageCount > 1 ? (
+        <div className="mt-6 flex items-center justify-center gap-3">
+          {page > 1 ? (
+            <Link
+              href={`/account/orders?page=${page - 1}`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Previous
+            </Link>
+          ) : null}
+          <span className="text-sm font-semibold text-slate-500">
+            Page {page} of {pageCount}
+          </span>
+          {page < pageCount ? (
+            <Link
+              href={`/account/orders?page=${page + 1}`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Next
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

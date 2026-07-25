@@ -15,7 +15,7 @@ import { FeaturedSectionHeader } from "@/features/catalog/components/FeaturedSec
 import { buttonVariants } from "@/components/ui/button";
 import { HomeProductSearch } from "@/features/catalog/components/HomeProductSearch";
 import { getFeaturedAccessories, getFeaturedProducts } from "@/features/catalog/queries";
-import { categoryHref, toProductCardProps } from "@/features/catalog/presentation";
+import { toProductCardProps } from "@/features/catalog/presentation";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -203,7 +203,7 @@ export default async function HomePage() {
             eyebrow="Popular"
             title="Featured products."
             description="Ready-to-buy models for everyday water care."
-            href={categoryHref("residential")}
+            href="/products"
             viewAllLabel="View all products"
           />
           <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
@@ -237,7 +237,7 @@ export default async function HomePage() {
               eyebrow="Essentials"
               title="Featured accessories."
               description="Filters, membranes, meters, and spare parts that keep systems running."
-              href={categoryHref("accessories")}
+              href="/accessories"
               viewAllLabel="View all accessories"
             />
             <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">

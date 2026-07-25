@@ -8,10 +8,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const productLinks = [
-  { label: "Family", href: "/category/residential" },
-  { label: "Mother & Child", href: "/category/mother-and-child" },
-  { label: "Accessories", href: "/category/accessories" },
-  { label: "Office / Commercial", href: "/commercial-solutions" },
+  { label: "All Products", href: "/products" },
+  { label: "Family", href: "/products?segment=family" },
+  { label: "Mother & Child", href: "/products?segment=mother" },
+  { label: "Accessories", href: "/accessories" },
+  { label: "Office / Commercial", href: "/products?segment=office" },
 ];
 
 const helpLinks = [
@@ -34,9 +35,9 @@ export function Footer() {
             <Image
               src="/logo.png"
               alt="Padma Mineral Water"
-              width={180}
-              height={80}
-              className="h-14 w-auto object-contain"
+              width={160}
+              height={160}
+              className="size-20 object-contain"
             />
           </Link>
           <p className="mt-4 max-w-sm text-sm leading-7 text-blue-100/80">

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, X } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ export function QuoteRequestDialog({
   const [isPending, startTransition] = useTransition();
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const formOpenedAt = useRef<number>(Date.now());
 
   const {
     register,
@@ -37,11 +38,12 @@ export function QuoteRequestDialog({
     formState: { errors },
   } = useForm<QuoteRequestInput>({
     resolver: zodResolver(quoteRequestSchema),
-    defaultValues: { requirement: defaultRequirement },
+    defaultValues: { requirement: defaultRequirement, _website: "" },
   });
 
   useEffect(() => {
     if (open) {
+      formOpenedAt.current = Date.now();
       setSubmitted(false);
       setServerError(null);
       reset({
@@ -52,6 +54,7 @@ export function QuoteRequestDialog({
         email: "",
         capacityNeeded: "",
         _website: "",
+        _formOpenedAt: formOpenedAt.current,
       });
     }
   }, [open, defaultRequirement, reset]);
@@ -67,7 +70,10 @@ export function QuoteRequestDialog({
   const onSubmit = (values: QuoteRequestInput) => {
     setServerError(null);
     startTransition(async () => {
-      const result = await createQuoteRequest(values);
+      const result = await createQuoteRequest({
+        ...values,
+        _formOpenedAt: formOpenedAt.current,
+      });
       if (result.ok) setSubmitted(true);
       else setServerError(result.error);
     });
@@ -84,7 +90,7 @@ export function QuoteRequestDialog({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative z-10 w-full max-w-lg rounded-2xl border border-blue-100 bg-white p-6 shadow-2xl sm:p-8 max-h-[90vh] overflow-y-auto"
+        className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-blue-100 bg-white p-6 shadow-2xl sm:p-8"
       >
         <button
           type="button"
@@ -102,7 +108,8 @@ export function QuoteRequestDialog({
               Request received!
             </h2>
             <p className="mt-2 text-sm text-slate-600">
-              Thank you. Our team will contact you within 48 hours to schedule your consultation.
+              Thank you. Our team will contact you within 48 hours to schedule
+              your consultation.
             </p>
             <Button className="mt-6" onClick={() => onOpenChange(false)}>
               Done
@@ -110,36 +117,66 @@ export function QuoteRequestDialog({
           </div>
         ) : (
           <>
-            <h2 className="text-xl font-extrabold tracking-tight text-slate-900">{title}</h2>
+            <h2 className="text-xl font-extrabold tracking-tight text-slate-900">
+              {title}
+            </h2>
             <p className="mt-1 text-sm text-slate-600">
               Share your requirement and we&apos;ll prepare a tailored quote.
             </p>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-3" noValidate>
-              {/* Honeypot — hidden from real users, filled by bots */}
-              <div aria-hidden="true" className="absolute -left-[9999px] opacity-0 pointer-events-none" tabIndex={-1}>
-                <label htmlFor="quote-website">Website</label>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="relative mt-5 space-y-3"
+              noValidate
+            >
+              {/*
+                Honeypot: off-screen (not display:none) so bots still see it
+                in the DOM, while real users and screen readers skip it.
+              */}
+              <div
+                className="pointer-events-none absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
+                aria-hidden="true"
+              >
+                <label htmlFor="quote-company-website">Company website</label>
                 <input
-                  id="quote-website"
+                  id="quote-company-website"
                   type="text"
+                  name="company_website"
                   autoComplete="off"
                   tabIndex={-1}
                   {...register("_website")}
                 />
               </div>
 
+              <input
+                type="hidden"
+                {...register("_formOpenedAt", { valueAsNumber: true })}
+              />
+
               <div>
-                <Input placeholder="Full name *" aria-label="Full name" {...register("name")} />
+                <Input
+                  placeholder="Full name *"
+                  aria-label="Full name"
+                  {...register("name")}
+                />
                 {errors.name && (
-                  <p className="mt-1 text-xs text-rose-600">{errors.name.message}</p>
+                  <p className="mt-1 text-xs text-rose-600">
+                    {errors.name.message}
+                  </p>
                 )}
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <Input placeholder="Phone *" aria-label="Phone" {...register("phone")} />
+                  <Input
+                    placeholder="Phone *"
+                    aria-label="Phone"
+                    {...register("phone")}
+                  />
                   {errors.phone && (
-                    <p className="mt-1 text-xs text-rose-600">{errors.phone.message}</p>
+                    <p className="mt-1 text-xs text-rose-600">
+                      {errors.phone.message}
+                    </p>
                   )}
                 </div>
                 <Input
@@ -157,11 +194,12 @@ export function QuoteRequestDialog({
                   {...register("email")}
                 />
                 {errors.email && (
-                  <p className="mt-1 text-xs text-rose-600">{errors.email.message}</p>
+                  <p className="mt-1 text-xs text-rose-600">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
-              {/* Capacity Needed */}
               <div>
                 <Input
                   placeholder="Capacity needed (e.g. 100 LPH, 500 GPD)"
@@ -179,7 +217,9 @@ export function QuoteRequestDialog({
                   {...register("requirement")}
                 />
                 {errors.requirement && (
-                  <p className="mt-1 text-xs text-rose-600">{errors.requirement.message}</p>
+                  <p className="mt-1 text-xs text-rose-600">
+                    {errors.requirement.message}
+                  </p>
                 )}
               </div>
 
@@ -187,7 +227,12 @@ export function QuoteRequestDialog({
                 <p className="text-sm text-rose-600">{serverError}</p>
               )}
 
-              <Button type="submit" size="lg" className="w-full" disabled={isPending}>
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={isPending}
+              >
                 {isPending ? "Submitting…" : "Request Consultation"}
               </Button>
             </form>

@@ -149,6 +149,201 @@ export async function resolveCategoryScope(
   };
 }
 
+export type CatalogHub = "products" | "accessories";
+export type CatalogSegment = "all" | "family" | "mother" | "office";
+
+const OFFICE_ACCESSORY_SLUGS = [
+  "water-dispenser",
+  "membrane",
+  "fittings",
+] as const;
+
+async function mergeScopes(
+  scopes: CategoryScope[],
+  meta: {
+    name: string;
+    slug: string;
+    description: string;
+  },
+): Promise<CategoryScope | null> {
+  if (scopes.length === 0) return null;
+  const primary = scopes[0]!;
+  const ids = new Set<string>();
+  const sidebar: CategoryScope["sidebarCategories"] = [];
+  const seen = new Set<string>();
+
+  for (const scope of scopes) {
+    for (const id of scope.descendantIds) ids.add(id);
+    for (const cat of scope.sidebarCategories) {
+      if (seen.has(cat.id)) continue;
+      seen.add(cat.id);
+      sidebar.push(cat);
+    }
+  }
+
+  return {
+    current: {
+      id: primary.current.id,
+      name: meta.name,
+      slug: meta.slug,
+      description: meta.description,
+    },
+    root: primary.root,
+    sidebarCategories: sidebar,
+    descendantIds: [...ids],
+  };
+}
+
+/**
+ * Scope for /products and /accessories hub pages.
+ * Products: All | Family | Mother & Child | Office
+ * Accessories: Family | Office
+ */
+export async function resolveHubScope(
+  hub: CatalogHub,
+  segment: CatalogSegment,
+): Promise<CategoryScope | null> {
+  if (hub === "products") {
+    if (segment === "all") {
+      const scopes = (
+        await Promise.all([
+          resolveCategoryScope("residential"),
+          resolveCategoryScope("mother-and-child"),
+          resolveCategoryScope("commercial"),
+        ])
+      ).filter((s): s is CategoryScope => Boolean(s));
+
+      return mergeScopes(scopes, {
+        name: "All Products",
+        slug: "all",
+        description:
+          "Browse every Padma Mineral Water purifier — family, mother & child, and office.",
+      });
+    }
+
+    if (segment === "mother") {
+      const scope = await resolveCategoryScope("mother-and-child");
+      if (!scope) return null;
+      return {
+        ...scope,
+        current: {
+          ...scope.current,
+          name: "Mother & Child",
+          slug: "mother",
+          description:
+            scope.current.description ??
+            "Purifiers and care products for mothers, babies, and families.",
+        },
+      };
+    }
+
+    const rootSlug = segment === "family" ? "residential" : "commercial";
+    const scope = await resolveCategoryScope(rootSlug);
+    if (!scope) return null;
+
+    if (segment === "family") {
+      return {
+        ...scope,
+        current: {
+          ...scope.current,
+          name: "Family",
+          slug: "family",
+          description:
+            scope.current.description ??
+            "Residential water purifiers for everyday home use.",
+        },
+      };
+    }
+
+    return {
+      ...scope,
+      current: {
+        ...scope.current,
+        name: "Office",
+        slug: "office",
+        description:
+          scope.current.description ??
+          "Commercial and industrial RO systems for offices and facilities.",
+      },
+    };
+  }
+
+  // Accessories hub — only family / office segments
+  const accessories = await resolveCategoryScope("accessories");
+  if (!accessories) return null;
+
+  const accessorySegment = segment === "office" ? "office" : "family";
+
+  if (accessorySegment === "family") {
+    const officeIds = await prisma.category.findMany({
+      where: { slug: { in: [...OFFICE_ACCESSORY_SLUGS] } },
+      select: { id: true },
+    });
+    const exclude = new Set(officeIds.map((c) => c.id));
+    const descendantIds = accessories.descendantIds.filter(
+      (id) => !exclude.has(id),
+    );
+    const sidebarCategories = accessories.sidebarCategories.filter(
+      (c) => !exclude.has(c.id),
+    );
+
+    return {
+      current: {
+        id: accessories.current.id,
+        name: "Family accessories",
+        slug: "family",
+        description:
+          "Filters, cartridges, meters, and parts for home purifiers.",
+      },
+      root: accessories.root,
+      sidebarCategories,
+      descendantIds:
+        descendantIds.length > 0 ? descendantIds : accessories.descendantIds,
+    };
+  }
+
+  const officeCats = await prisma.category.findMany({
+    where: { slug: { in: [...OFFICE_ACCESSORY_SLUGS] } },
+    select: { id: true, name: true, slug: true },
+  });
+
+  if (officeCats.length === 0) {
+    return {
+      ...accessories,
+      current: {
+        ...accessories.current,
+        name: "Office accessories",
+        slug: "office",
+        description: "Accessories for commercial and office systems.",
+      },
+    };
+  }
+
+  return {
+    current: {
+      id: accessories.current.id,
+      name: "Office accessories",
+      slug: "office",
+      description:
+        "Dispensers, membranes, and fittings for office & commercial setups.",
+    },
+    root: accessories.root,
+    sidebarCategories: officeCats,
+    descendantIds: officeCats.map((c) => c.id),
+  };
+}
+
+export function parseCatalogSegment(
+  raw: string | string[] | undefined,
+  fallback: CatalogSegment = "all",
+): CatalogSegment {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (value === "office" || value === "family" || value === "mother" || value === "all") {
+    return value;
+  }
+  return fallback;
+}
+
 // ─── Filtered product listing ───────────────────────────────────
 
 function buildTechnologyFilter(tech: string[]): Prisma.ProductWhereInput[] {

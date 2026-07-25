@@ -5,7 +5,7 @@ import { Package, ShoppingBag } from "lucide-react";
 
 import { auth } from "@/auth";
 import { buttonVariants } from "@/components/ui/button";
-import { getOrdersByUser } from "@/features/checkout/queries";
+import { listUserOrders } from "@/features/checkout/queries";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -41,11 +41,20 @@ function paymentLabel(method: string | null) {
   return method ?? "—";
 }
 
-export default async function TrackOrderPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function TrackOrderPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect("/sign-in?redirect_url=/track-order");
 
-  const orders = await getOrdersByUser(session.user.id);
+  const raw = await searchParams;
+  const page = Math.max(1, Number(Array.isArray(raw.page) ? raw.page[0] : raw.page) || 1);
+  const { items: orders, pageCount } = await listUserOrders(session.user.id, {
+    page,
+    pageSize: 10,
+  });
 
   return (
     <div className="section-shell py-10 lg:py-14">
@@ -125,6 +134,13 @@ export default async function TrackOrderPage() {
                     </span>
                   </li>
                 ))}
+                {order.itemCount > order.items.length ? (
+                  <li className="text-xs text-slate-500">
+                    +{order.itemCount - order.items.length} more item
+                    {order.itemCount - order.items.length === 1 ? "" : "s"} — view
+                    details for full list
+                  </li>
+                ) : null}
               </ul>
 
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-blue-50 pt-4">
@@ -165,6 +181,30 @@ export default async function TrackOrderPage() {
           ))}
         </div>
       )}
+
+      {pageCount > 1 ? (
+        <div className="mt-8 flex items-center justify-center gap-3">
+          {page > 1 ? (
+            <Link
+              href={`/track-order?page=${page - 1}`}
+              className={cn(buttonVariants({ variant: "outline" }), "text-sm")}
+            >
+              Previous
+            </Link>
+          ) : null}
+          <span className="text-sm font-semibold text-slate-500">
+            Page {page} of {pageCount}
+          </span>
+          {page < pageCount ? (
+            <Link
+              href={`/track-order?page=${page + 1}`}
+              className={cn(buttonVariants({ variant: "outline" }), "text-sm")}
+            >
+              Next
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

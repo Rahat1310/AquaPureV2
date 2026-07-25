@@ -69,7 +69,11 @@ export function CheckoutFlow({ cart }: CheckoutFlowProps) {
       if (result.ok) {
         router.push(`/checkout/confirmation/${result.orderId}`);
       } else {
-        setServerError(result.error);
+        const detail =
+          result.fieldErrors && Object.keys(result.fieldErrors).length > 0
+            ? Object.values(result.fieldErrors)[0]
+            : result.error;
+        setServerError(detail ?? result.error);
       }
     });
   };

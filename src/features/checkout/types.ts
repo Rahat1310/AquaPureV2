@@ -32,6 +32,36 @@ export interface OrderLineDTO {
   total: number;
 }
 
+/** Lean list row for /orders and /track-order (no address, capped item preview). */
+export interface OrderListItemDTO {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  total: number;
+  shipping: number;
+  paymentMethod: PaymentMethod | null;
+  bkashSenderNumber: string | null;
+  bkashTrxId: string | null;
+  createdAt: string;
+  itemCount: number;
+  items: Array<{
+    id: string;
+    name: string;
+    variantName: string | null;
+    qty: number;
+    total: number;
+  }>;
+}
+
+export interface OrderListResult {
+  items: OrderListItemDTO[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
+
 export interface OrderSummaryDTO {
   id: string;
   orderNumber: string;
@@ -54,4 +84,9 @@ export interface OrderSummaryDTO {
 
 export type CreateOrderResult =
   | { ok: true; orderId: string; orderNumber: string }
-  | { ok: false; error: string };
+  | {
+      ok: false;
+      error: string;
+      /** Zod field paths → messages (e.g. `bkashTrxId`, `address.phone`) */
+      fieldErrors?: Record<string, string>;
+    };

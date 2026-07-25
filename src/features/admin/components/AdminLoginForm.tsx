@@ -23,7 +23,6 @@ export function AdminLoginForm() {
           autoComplete="username"
           required
           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none ring-primary/30 focus:bg-white focus:ring-2"
-          placeholder="admin@padmamineralwater.com"
         />
       </div>
       <div>
@@ -37,7 +36,6 @@ export function AdminLoginForm() {
           autoComplete="current-password"
           required
           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none ring-primary/30 focus:bg-white focus:ring-2"
-          placeholder="••••••••"
         />
       </div>
       {state.error ? (
