@@ -33,11 +33,12 @@ function generateOrderNumber(): string {
 }
 
 function zodFieldErrors(
-  issues: { path: (string | number)[]; message: string }[],
+  issues: { path: PropertyKey[]; message: string }[],
 ): Record<string, string> {
   const out: Record<string, string> = {};
   for (const issue of issues) {
-    const key = issue.path.join(".") || "_form";
+    const key =
+      issue.path.map((p) => String(p)).join(".") || "_form";
     if (!out[key]) out[key] = issue.message;
   }
   return out;

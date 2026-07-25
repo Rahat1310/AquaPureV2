@@ -38,7 +38,10 @@ export function QuoteRequestDialog({
     formState: { errors },
   } = useForm<QuoteRequestInput>({
     resolver: zodResolver(quoteRequestSchema),
-    defaultValues: { requirement: defaultRequirement, _website: "" },
+    defaultValues: {
+      requirement: defaultRequirement,
+      _website: "",
+    },
   });
 
   useEffect(() => {
@@ -54,7 +57,6 @@ export function QuoteRequestDialog({
         email: "",
         capacityNeeded: "",
         _website: "",
-        _formOpenedAt: formOpenedAt.current,
       });
     }
   }, [open, defaultRequirement, reset]);
@@ -141,17 +143,11 @@ export function QuoteRequestDialog({
                 <input
                   id="quote-company-website"
                   type="text"
-                  name="company_website"
                   autoComplete="off"
                   tabIndex={-1}
                   {...register("_website")}
                 />
               </div>
-
-              <input
-                type="hidden"
-                {...register("_formOpenedAt", { valueAsNumber: true })}
-              />
 
               <div>
                 <Input

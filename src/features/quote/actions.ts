@@ -43,19 +43,13 @@ export async function createQuoteRequest(
 
   // ── 2. Timing check ────────────────────────────────────────────────────────
   const openedAt = Number(raw._formOpenedAt);
-  if (
-    Number.isFinite(openedAt) &&
-    openedAt > 0 &&
-    Date.now() - openedAt < INQUIRY_MIN_FILL_MS
-  ) {
-    return { ok: true };
-  }
-  // Missing timestamp: treat as suspicious but still validate/rate-limit
-  // (don't silently accept — bots can omit the field). Require it.
+  // Missing / invalid / too-fast / absurd timestamps → silent fake success
   if (!Number.isFinite(openedAt) || openedAt <= 0) {
     return { ok: true };
   }
-  // Reject absurd future / ancient timestamps (clock skew ±5 min allowed)
+  if (Date.now() - openedAt < INQUIRY_MIN_FILL_MS) {
+    return { ok: true };
+  }
   if (Math.abs(Date.now() - openedAt) > 5 * 60 * 1000) {
     return { ok: true };
   }

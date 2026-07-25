@@ -64,7 +64,7 @@ export const quoteRequestSchema = z.object({
   /** Honeypot — bots fill this; humans leave empty (validated server-side). */
   _website: z.string().max(200).optional().or(z.literal("")),
   /** Client form-open timestamp (ms) for timing check */
-  _formOpenedAt: z.coerce.number().int().positive().optional(),
+  _formOpenedAt: z.number().int().positive().optional(),
 });
 
 export type QuoteRequestInput = z.infer<typeof quoteRequestSchema>;
