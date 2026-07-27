@@ -27,7 +27,12 @@ function primaryEmail(user: ClerkUserLike): string | null {
   );
 }
 
-/** Upsert Prisma user from Clerk. Public customers only — never staff. */
+/** Upsert Prisma user from Clerk. Public customers only — never staff.
+ *
+ * @deprecated Use the Clerk webhook at /api/webhooks/clerk instead for
+ * background sync. This function is retained for one-off manual calls only
+ * (e.g. if you need to force-sync a specific user from a script).
+ */
 export async function syncUserFromClerk(clerkUser: ClerkUserLike) {
   const email = primaryEmail(clerkUser);
   const role = R.CUSTOMER;
@@ -91,15 +96,29 @@ export async function syncUserFromClerk(clerkUser: ClerkUserLike) {
   return created;
 }
 
-/** Customer session via Clerk. Admin panel uses getAdminSession() instead. */
+/**
+ * Customer session via Clerk.
+ *
+ * Hot path optimisation: performs a single read-only DB lookup (findUnique by
+ * clerkId) instead of the previous find→upsert→create chain. User rows are
+ * created / updated by the Clerk webhook at /api/webhooks/clerk. If the row
+ * doesn't exist yet (race between sign-up and webhook delivery) auth() returns
+ * null, which is safe — the middleware will redirect to /sign-in.
+ *
+ * Admin panel uses getAdminSession() instead.
+ */
 export async function auth(): Promise<AppSession | null> {
   const { userId } = await clerkAuth();
   if (!userId) return null;
 
-  const clerkUser = await currentUser();
-  if (!clerkUser) return null;
+  // Single read-only lookup — no writes on the hot request path
+  const dbUser = await prisma.user.findUnique({
+    where: { clerkId: userId },
+    select: { id: true, email: true, name: true, image: true, isActive: true },
+  });
 
-  const dbUser = await syncUserFromClerk(clerkUser);
+  // Row not yet created by webhook (rare race) → treat as unauthenticated
+  if (!dbUser) return null;
   if (!dbUser.isActive) return null;
 
   return {

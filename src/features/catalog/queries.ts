@@ -1,5 +1,7 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
+
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
@@ -45,7 +47,7 @@ const listSelect = {
 
 // ─── Featured / Best Sellers ────────────────────────────────────
 
-export async function getFeaturedProducts(limit = 8): Promise<ProductListItem[]> {
+async function _getFeaturedProducts(limit: number): Promise<ProductListItem[]> {
   const rows = await prisma.product.findMany({
     where: { status: ACTIVE, isFeatured: true },
     select: listSelect,
@@ -55,7 +57,15 @@ export async function getFeaturedProducts(limit = 8): Promise<ProductListItem[]>
   return rows.map(toProductListItem);
 }
 
-export async function getBestSellers(limit = 8): Promise<ProductListItem[]> {
+export function getFeaturedProducts(limit = 8): Promise<ProductListItem[]> {
+  return unstable_cache(
+    () => _getFeaturedProducts(limit),
+    ["featured-products", String(limit)],
+    { tags: ["products"], revalidate: 600 },
+  )();
+}
+
+async function _getBestSellers(limit: number): Promise<ProductListItem[]> {
   const rows = await prisma.product.findMany({
     where: { status: ACTIVE, isBestSeller: true },
     select: listSelect,
@@ -65,9 +75,17 @@ export async function getBestSellers(limit = 8): Promise<ProductListItem[]> {
   return rows.map(toProductListItem);
 }
 
+export function getBestSellers(limit = 8): Promise<ProductListItem[]> {
+  return unstable_cache(
+    () => _getBestSellers(limit),
+    ["best-sellers", String(limit)],
+    { tags: ["products"], revalidate: 600 },
+  )();
+}
+
 // ─── Categories ─────────────────────────────────────────────────
 
-export async function getRootCategories(): Promise<CategoryNode[]> {
+async function _getRootCategories(): Promise<CategoryNode[]> {
   const roots = await prisma.category.findMany({
     where: { parentId: null },
     orderBy: { displayOrder: "asc" },
@@ -95,6 +113,12 @@ export async function getRootCategories(): Promise<CategoryNode[]> {
     })),
   }));
 }
+
+export const getRootCategories = unstable_cache(
+  _getRootCategories,
+  ["root-categories"],
+  { tags: ["products"], revalidate: 600 },
+);
 
 export interface CategoryScope {
   current: { id: string; name: string; slug: string; description: string | null };
@@ -589,10 +613,14 @@ export async function getProductsInCategory(
 }
 
 /** Homepage accessories strip — same card grid as featured products. */
-export async function getFeaturedAccessories(
+export function getFeaturedAccessories(
   limit = 4,
 ): Promise<ProductListItem[]> {
-  return getProductsInCategory("accessories", limit);
+  return unstable_cache(
+    () => getProductsInCategory("accessories", limit),
+    ["featured-accessories", String(limit)],
+    { tags: ["products"], revalidate: 600 },
+  )();
 }
 
 export interface TestimonialDTO {

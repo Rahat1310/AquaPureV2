@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { Prisma } from "@prisma/client";
 
 import { getAdminSession } from "@/lib/admin-auth";
@@ -32,6 +32,8 @@ function actorId(session: { user?: { id?: string | null } | null }): string {
 }
 
 function revalidateCatalog() {
+  // Bust unstable_cache entries for homepage / catalog listing queries
+  revalidateTag("products");
   revalidatePath("/admin");
   revalidatePath("/admin/products");
   revalidatePath("/category");
