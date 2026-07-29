@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import Script from "next/script";
 
 import { NavigationLoader } from "@/components/shared/NavigationLoader";
 import { clerkAppearance } from "@/lib/clerk-appearance";
@@ -46,6 +47,21 @@ export default function RootLayout({
       appearance={clerkAppearance}
     >
       <html lang="en">
+        <head>
+          {/* Google tag (gtag.js) */}
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=G-B32VSPGJ63"
+            strategy="afterInteractive"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-B32VSPGJ63');
+            `}
+          </Script>
+        </head>
         <body className={inter.variable} suppressHydrationWarning>
           <NavigationLoader />
           {children}
