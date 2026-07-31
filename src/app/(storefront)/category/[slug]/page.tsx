@@ -8,6 +8,7 @@ import { CatalogToolbar } from "@/features/catalog/components/CatalogToolbar";
 import { CategoryFilters } from "@/features/catalog/components/CategoryFilters";
 import { Pagination } from "@/features/catalog/components/Pagination";
 import {
+  getAllCategorySlugs,
   getCatalogFacets,
   listProducts,
   resolveCategoryScope,
@@ -16,12 +17,17 @@ import { parseCatalogFilters } from "@/features/catalog/params";
 import { toProductCardProps } from "@/features/catalog/presentation";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+export async function generateStaticParams() {
+  const slugs = await getAllCategorySlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({
   params,

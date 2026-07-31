@@ -23,7 +23,6 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { buttonVariants } from "@/components/ui/button";
 import { CartDrawer } from "@/features/cart/components/CartDrawer";
 import { useCart } from "@/features/cart/CartContext";
-import type { CartSummary } from "@/features/cart/types";
 import { cn } from "@/lib/utils";
 
 type NavLeaf = { label: string; href: string; featured?: boolean };
@@ -375,7 +374,7 @@ function CascadingDropdown({
   );
 }
 
-export function Header({ initialCartSummary }: { initialCartSummary: CartSummary }) {
+export function Header() {
   const { isSignedIn } = useAuth();
   const { totalQty, openDrawer } = useCart();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -825,7 +824,7 @@ export function Header({ initialCartSummary }: { initialCartSummary: CartSummary
           )}
         </AnimatePresence>
       </header>
-      <CartDrawer initialSummary={initialCartSummary} />
+      <CartDrawer />
     </>
   );
 }

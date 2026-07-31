@@ -73,6 +73,7 @@ type ProductRow = {
   createdAt: Date;
   category?: { name: string } | null;
   reviews?: { rating: number }[];
+  /** Prefer _count.reviews over loading every rating row for list cards. */
   _count?: { reviews: number };
 };
 

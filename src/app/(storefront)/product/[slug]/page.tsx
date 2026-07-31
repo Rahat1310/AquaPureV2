@@ -9,6 +9,7 @@ import { ProductPurchasePanel } from "@/features/catalog/components/ProductPurch
 import { ProductTabs } from "@/features/catalog/components/ProductTabs";
 import { Badge } from "@/components/ui/badge";
 import {
+  getAllProductSlugs,
   getProductBySlug,
   getRelatedProducts,
 } from "@/features/catalog/queries";
@@ -18,11 +19,16 @@ import {
 import { categoryHref, toProductCardProps } from "@/features/catalog/presentation";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export async function generateStaticParams() {
+  const slugs = await getAllProductSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;

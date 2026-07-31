@@ -1,27 +1,20 @@
-import { auth } from "@/auth";
+import { CartBadge } from "@/features/cart/CartBadge";
 import { CartProvider } from "@/features/cart/CartContext";
-import { getCartQty, getCartSummary } from "@/features/cart/queries";
 import { PortalNav } from "@/features/portal/components/PortalNav";
 import { Footer } from "@/components/shared/Footer";
 import { Header } from "@/components/shared/Header";
 import { RouteProgressBar } from "@/components/shared/RouteProgressBar";
 
-export default async function PortalLayout({
+export default function PortalLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-  const userId = session?.user?.id ?? null;
-  const [initialQty, initialCartSummary] = await Promise.all([
-    getCartQty(userId),
-    getCartSummary(userId),
-  ]);
-
   return (
-    <CartProvider initialQty={initialQty}>
+    <CartProvider>
+      <CartBadge />
       <RouteProgressBar />
-      <Header initialCartSummary={initialCartSummary} />
+      <Header />
       <div className="relative min-h-[60vh] overflow-hidden bg-gradient-to-b from-[#eef5ff] via-white to-[#f7fbff]">
         <div
           aria-hidden

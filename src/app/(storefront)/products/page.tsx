@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 import { CatalogHubView } from "@/features/catalog/components/CatalogHubView";
+import { loadCatalogHub } from "@/features/catalog/load-hub";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "All Products",
@@ -10,19 +11,16 @@ export const metadata: Metadata = {
     "Browse Padma Mineral Water purifiers for family homes and office / commercial use.",
 };
 
-type PageProps = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-};
-
-export default async function ProductsPage({ searchParams }: PageProps) {
-  const raw = await searchParams;
+export default async function ProductsPage() {
+  // No searchParams here — keeps the route static/ISR. Filters hydrate client-side.
+  const initial = await loadCatalogHub("products", {});
 
   return (
     <CatalogHubView
       hub="products"
       title="All Products"
       subtitle="Browse everything in one place — filter by All, Family, Mother & Child, or Office."
-      searchParams={raw}
+      initial={initial}
     />
   );
 }

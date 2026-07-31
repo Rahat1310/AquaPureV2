@@ -206,7 +206,7 @@ export default async function HomePage() {
             href="/products"
             viewAllLabel="View all products"
           />
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 xl:grid-cols-4">
             {featured.map((product) => (
               <ProductCard key={product.id} {...toProductCardProps(product)} />
             ))}
@@ -240,7 +240,7 @@ export default async function HomePage() {
               href="/accessories"
               viewAllLabel="View all accessories"
             />
-            <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 xl:grid-cols-4">
               {accessories.map((product) => (
                 <ProductCard key={product.id} {...toProductCardProps(product)} />
               ))}

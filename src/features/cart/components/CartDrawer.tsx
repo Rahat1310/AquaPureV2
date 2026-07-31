@@ -17,24 +17,20 @@ const BDT = new Intl.NumberFormat("en-BD", {
   maximumFractionDigits: 0,
 });
 
-interface CartDrawerProps {
-  /** Pre-fetched from the Server Component layout */
-  initialSummary: CartSummary;
-}
+const EMPTY_SUMMARY: CartSummary = { items: [], totalQty: 0, subtotal: 0 };
 
-export function CartDrawer({ initialSummary }: CartDrawerProps) {
+export function CartDrawer() {
   const { isSignedIn } = useAuth();
   const { drawerOpen, closeDrawer, totalQty } = useCart();
-  const [summary, setSummary] = useState<CartSummary>(initialSummary);
+  const [summary, setSummary] = useState<CartSummary>(EMPTY_SUMMARY);
   const [isFetching, startFetch] = useTransition();
 
-  // Re-fetch cart summary whenever the drawer opens or totalQty changes
+  // Fetch cart when drawer opens (or qty changes while open)
   useEffect(() => {
     if (!drawerOpen) return;
     startFetch(async () => {
       try {
-        // We call the server query inline — Next.js server actions are fine here
-        const res = await fetch("/api/cart/summary");
+        const res = await fetch("/api/cart/summary", { credentials: "same-origin" });
         if (res.ok) {
           const data = (await res.json()) as CartSummary;
           setSummary(data);

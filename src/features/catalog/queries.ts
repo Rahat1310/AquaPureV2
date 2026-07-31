@@ -1,6 +1,7 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 
 import { Prisma } from "@prisma/client";
 
@@ -27,6 +28,9 @@ import {
 
 const ACTIVE = "ACTIVE";
 
+/** Cross-request catalog TTL. Bust via revalidateTag("products") on admin writes. */
+const CATALOG_REVALIDATE = 600;
+
 const listSelect = {
   id: true,
   name: true,
@@ -42,8 +46,24 @@ const listSelect = {
   isBestSeller: true,
   createdAt: true,
   category: { select: { name: true } },
-  reviews: { where: { isApproved: true }, select: { rating: true } },
+  // Count only — avoids loading every review row for each product card
+  _count: {
+    select: { reviews: { where: { isApproved: true } } },
+  },
 } satisfies Prisma.ProductSelect;
+
+function catalogFiltersKey(filters: CatalogFilters): string {
+  return [
+    filters.page,
+    filters.pageSize,
+    filters.sort,
+    filters.minPrice ?? "",
+    filters.maxPrice ?? "",
+    [...filters.categories].sort().join(","),
+    [...filters.brands].sort().join(","),
+    [...filters.technologies].sort().join(","),
+  ].join("|");
+}
 
 // ─── Featured / Best Sellers ────────────────────────────────────
 
@@ -54,14 +74,14 @@ async function _getFeaturedProducts(limit: number): Promise<ProductListItem[]> {
     orderBy: [{ isBestSeller: "desc" }, { createdAt: "desc" }],
     take: limit,
   });
-  return rows.map(toProductListItem);
+  return attachListRatings(rows.map(toProductListItem));
 }
 
 export function getFeaturedProducts(limit = 8): Promise<ProductListItem[]> {
   return unstable_cache(
     () => _getFeaturedProducts(limit),
     ["featured-products", String(limit)],
-    { tags: ["products"], revalidate: 600 },
+    { tags: ["products"], revalidate: CATALOG_REVALIDATE },
   )();
 }
 
@@ -72,14 +92,14 @@ async function _getBestSellers(limit: number): Promise<ProductListItem[]> {
     orderBy: [{ createdAt: "desc" }],
     take: limit,
   });
-  return rows.map(toProductListItem);
+  return attachListRatings(rows.map(toProductListItem));
 }
 
 export function getBestSellers(limit = 8): Promise<ProductListItem[]> {
   return unstable_cache(
     () => _getBestSellers(limit),
     ["best-sellers", String(limit)],
-    { tags: ["products"], revalidate: 600 },
+    { tags: ["products"], revalidate: CATALOG_REVALIDATE },
   )();
 }
 
@@ -117,7 +137,7 @@ async function _getRootCategories(): Promise<CategoryNode[]> {
 export const getRootCategories = unstable_cache(
   _getRootCategories,
   ["root-categories"],
-  { tags: ["products"], revalidate: 600 },
+  { tags: ["products"], revalidate: CATALOG_REVALIDATE },
 );
 
 export interface CategoryScope {
@@ -127,7 +147,7 @@ export interface CategoryScope {
   descendantIds: string[];
 }
 
-export async function resolveCategoryScope(
+async function _resolveCategoryScope(
   slug: string,
 ): Promise<CategoryScope | null> {
   const current = await prisma.category.findUnique({
@@ -172,6 +192,16 @@ export async function resolveCategoryScope(
     descendantIds,
   };
 }
+
+/** Request-deduped + cross-request cached category tree lookup. */
+export const resolveCategoryScope = cache(
+  (slug: string): Promise<CategoryScope | null> =>
+    unstable_cache(
+      () => _resolveCategoryScope(slug),
+      ["category-scope", slug],
+      { tags: ["products"], revalidate: CATALOG_REVALIDATE },
+    )(),
+);
 
 export type CatalogHub = "products" | "accessories";
 export type CatalogSegment = "all" | "family" | "mother" | "office";
@@ -413,9 +443,9 @@ async function resolveSelectedCategoryIds(
   return selected.length > 0 ? selected : fallbackIds;
 }
 
-export async function listProducts(
+async function _listProducts(
   filters: CatalogFilters,
-  scope?: CategoryScope | null,
+  scope: CategoryScope | null | undefined,
 ): Promise<ProductListResult> {
   const scopeIds = scope?.descendantIds ?? [];
   const categoryIds = scope
@@ -447,8 +477,10 @@ export async function listProducts(
     }),
   ]);
 
+  const items = await attachListRatings(rows.map(toProductListItem));
+
   return {
-    items: rows.map(toProductListItem),
+    items,
     total,
     page: filters.page,
     pageSize: filters.pageSize,
@@ -456,11 +488,58 @@ export async function listProducts(
   };
 }
 
+/** Cache listing results per filter+scope — major Neon saver on hub/category pages. */
+export async function listProducts(
+  filters: CatalogFilters,
+  scope?: CategoryScope | null,
+): Promise<ProductListResult> {
+  const scopeKey = scope
+    ? `${scope.current.slug}:${[...scope.descendantIds].sort().join(",")}`
+    : "none";
+
+  return unstable_cache(
+    () => _listProducts(filters, scope),
+    ["list-products", scopeKey, catalogFiltersKey(filters)],
+    { tags: ["products"], revalidate: CATALOG_REVALIDATE },
+  )();
+}
+
+/** One groupBy for averages instead of loading every review row per card. */
+async function attachListRatings(
+  items: ProductListItem[],
+): Promise<ProductListItem[]> {
+  if (items.length === 0) return items;
+
+  const stats = await prisma.review.groupBy({
+    by: ["productId"],
+    where: {
+      productId: { in: items.map((i) => i.id) },
+      isApproved: true,
+    },
+    _avg: { rating: true },
+    _count: { _all: true },
+  });
+
+  const byId = new Map(
+    stats.map((s) => [
+      s.productId,
+      {
+        rating: Math.round((s._avg.rating ?? 0) * 10) / 10,
+        reviewCount: s._count._all,
+      },
+    ]),
+  );
+
+  return items.map((item) => {
+    const s = byId.get(item.id);
+    if (!s) return item;
+    return { ...item, rating: s.rating, reviewCount: s.reviewCount };
+  });
+}
+
 // ─── Facets (sidebar filter options) ────────────────────────────
 
-export async function getCatalogFacets(
-  scope: CategoryScope,
-): Promise<CatalogFacets> {
+async function _getCatalogFacets(scope: CategoryScope): Promise<CatalogFacets> {
   const scopeWhere: Prisma.ProductWhereInput = {
     status: ACTIVE,
     categoryId: { in: scope.descendantIds },
@@ -509,11 +588,20 @@ export async function getCatalogFacets(
   };
 }
 
+export async function getCatalogFacets(
+  scope: CategoryScope,
+): Promise<CatalogFacets> {
+  const scopeKey = `${scope.current.slug}:${[...scope.descendantIds].sort().join(",")}`;
+  return unstable_cache(
+    () => _getCatalogFacets(scope),
+    ["catalog-facets", scopeKey],
+    { tags: ["products"], revalidate: CATALOG_REVALIDATE },
+  )();
+}
+
 // ─── Product detail ─────────────────────────────────────────────
 
-export async function getProductBySlug(
-  slug: string,
-): Promise<ProductDetail | null> {
+async function _getProductBySlug(slug: string): Promise<ProductDetail | null> {
   const product = await prisma.product.findFirst({
     where: { slug, status: ACTIVE },
     include: {
@@ -574,10 +662,23 @@ export async function getProductBySlug(
   };
 }
 
-export async function getRelatedProducts(
+/**
+ * Product detail — React cache() dedupes metadata+page in one request;
+ * unstable_cache avoids Neon on repeat views for ~10 minutes.
+ */
+export const getProductBySlug = cache(
+  (slug: string): Promise<ProductDetail | null> =>
+    unstable_cache(
+      () => _getProductBySlug(slug),
+      ["product-by-slug", slug],
+      { tags: ["products"], revalidate: CATALOG_REVALIDATE },
+    )(),
+);
+
+async function _getRelatedProducts(
   categoryId: string,
   excludeProductId: string,
-  limit = 4,
+  limit: number,
 ): Promise<ProductListItem[]> {
   const rows = await prisma.product.findMany({
     where: {
@@ -589,7 +690,19 @@ export async function getRelatedProducts(
     orderBy: [{ isBestSeller: "desc" }, { createdAt: "desc" }],
     take: limit,
   });
-  return rows.map(toProductListItem);
+  return attachListRatings(rows.map(toProductListItem));
+}
+
+export function getRelatedProducts(
+  categoryId: string,
+  excludeProductId: string,
+  limit = 4,
+): Promise<ProductListItem[]> {
+  return unstable_cache(
+    () => _getRelatedProducts(categoryId, excludeProductId, limit),
+    ["related-products", categoryId, excludeProductId, String(limit)],
+    { tags: ["products"], revalidate: CATALOG_REVALIDATE },
+  )();
 }
 
 export async function getProductsInCategory(
@@ -609,7 +722,7 @@ export async function getProductsInCategory(
     orderBy: [{ isBestSeller: "desc" }, { createdAt: "desc" }],
     take: limit,
   });
-  return rows.map(toProductListItem);
+  return attachListRatings(rows.map(toProductListItem));
 }
 
 /** Homepage accessories strip — same card grid as featured products. */
@@ -619,7 +732,7 @@ export function getFeaturedAccessories(
   return unstable_cache(
     () => getProductsInCategory("accessories", limit),
     ["featured-accessories", String(limit)],
-    { tags: ["products"], revalidate: 600 },
+    { tags: ["products"], revalidate: CATALOG_REVALIDATE },
   )();
 }
 
@@ -657,6 +770,14 @@ export async function getAllProductSlugs(): Promise<string[]> {
   const rows = await prisma.product.findMany({
     where: { status: ACTIVE },
     select: { slug: true },
+  });
+  return rows.map((r) => r.slug);
+}
+
+export async function getAllCategorySlugs(): Promise<string[]> {
+  const rows = await prisma.category.findMany({
+    select: { slug: true },
+    orderBy: { displayOrder: "asc" },
   });
   return rows.map((r) => r.slug);
 }

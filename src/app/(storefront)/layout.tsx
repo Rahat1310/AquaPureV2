@@ -1,28 +1,25 @@
-import { auth } from "@/auth";
+import { CartBadge } from "@/features/cart/CartBadge";
 import { CartProvider } from "@/features/cart/CartContext";
-import { getCartQty } from "@/features/cart/queries";
-import { getCartSummary } from "@/features/cart/queries";
 import { Footer } from "@/components/shared/Footer";
 import { Header } from "@/components/shared/Header";
 import { RouteProgressBar } from "@/components/shared/RouteProgressBar";
 import { WhatsAppFloatingButton } from "@/components/shared/WhatsAppFloatingButton";
 
-export default async function StorefrontLayout({
+/**
+ * Static-friendly storefront shell.
+ * Cart/auth are hydrated client-side via CartBadge → /api/cart/summary
+ * so product/catalog pages can use ISR (`revalidate = 600`).
+ */
+export default function StorefrontLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-  const userId = session?.user?.id ?? null;
-  const [initialQty, initialCartSummary] = await Promise.all([
-    getCartQty(userId),
-    getCartSummary(userId),
-  ]);
-
   return (
-    <CartProvider initialQty={initialQty}>
+    <CartProvider>
+      <CartBadge />
       <RouteProgressBar />
-      <Header initialCartSummary={initialCartSummary} />
+      <Header />
       <main className="min-h-[60vh]">{children}</main>
       <Footer />
       <WhatsAppFloatingButton context="product-inquiry" />
