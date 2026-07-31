@@ -99,37 +99,102 @@ export async function syncUserFromClerk(clerkUser: ClerkUserLike) {
 /**
  * Customer session via Clerk.
  *
- * Hot path optimisation: performs a single read-only DB lookup (findUnique by
- * clerkId) instead of the previous find→upsert→create chain. User rows are
- * created / updated by the Clerk webhook at /api/webhooks/clerk. If the row
- * doesn't exist yet (race between sign-up and webhook delivery) auth() returns
- * null, which is safe — the middleware will redirect to /sign-in.
- *
- * Admin panel uses getAdminSession() instead.
+ * Avoids sign-in → /account → /sign-in loops: if the Prisma row is missing
+ * (webhook delay / first login race), we create/attach it on the spot instead
+ * of returning null. Row sync still happens primarily via /api/webhooks/clerk;
+ * this is a safe fallback for the first authenticated request.
  */
 export async function auth(): Promise<AppSession | null> {
   const { userId } = await clerkAuth();
   if (!userId) return null;
 
-  // Single read-only lookup — no writes on the hot request path
-  const dbUser = await prisma.user.findUnique({
+  const clerkUser = await currentUser();
+  if (!clerkUser) return null;
+
+  // Fast path: existing row
+  const existing = await prisma.user.findUnique({
     where: { clerkId: userId },
     select: { id: true, email: true, name: true, image: true, isActive: true },
   });
 
-  // Row not yet created by webhook (rare race) → treat as unauthenticated
-  if (!dbUser) return null;
-  if (!dbUser.isActive) return null;
+  if (existing) {
+    if (!existing.isActive) return null;
+    return {
+      user: {
+        id: existing.id,
+        email: existing.email,
+        name: existing.name,
+        role: R.CUSTOMER,
+        image: existing.image,
+      },
+    };
+  }
 
-  return {
-    user: {
-      id: dbUser.id,
-      email: dbUser.email,
-      name: dbUser.name,
-      role: R.CUSTOMER,
-      image: dbUser.image,
-    },
-  };
+  // First login / webhook race: create or attach the row now (prevents loop)
+  const email = primaryEmail(clerkUser);
+  const name =
+    [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
+    clerkUser.username ||
+    email;
+  const image = clerkUser.imageUrl || null;
+
+  try {
+    const created = await prisma.user.create({
+      data: {
+        clerkId: userId,
+        email,
+        name,
+        image,
+        role: R.CUSTOMER,
+        emailVerified: email ? new Date() : null,
+        isActive: true,
+      },
+      select: { id: true, email: true, name: true, image: true },
+    });
+
+    try {
+      const { mergeGuestCart } = await import("@/features/cart/actions");
+      await mergeGuestCart(created.id);
+    } catch {
+      // non-critical
+    }
+
+    return {
+      user: {
+        id: created.id,
+        email: created.email,
+        name: created.name,
+        role: R.CUSTOMER,
+        image: created.image,
+      },
+    };
+  } catch {
+    // Email already exists but clerkId wasn't linked (legacy user) — attach
+    if (email) {
+      const linked = await prisma.user.updateMany({
+        where: { email, clerkId: null },
+        data: { clerkId: userId, name, image, emailVerified: new Date() },
+      });
+      if (linked.count > 0) {
+        const row = await prisma.user.findUnique({
+          where: { email },
+          select: { id: true, email: true, name: true, image: true },
+        });
+        if (row) {
+          return {
+            user: {
+              id: row.id,
+              email: row.email,
+              name: row.name,
+              role: R.CUSTOMER,
+              image: row.image,
+            },
+          };
+        }
+      }
+    }
+    return null;
+  }
 }
 
 export async function signOut(_opts?: { redirectTo?: string }): Promise<void> {
