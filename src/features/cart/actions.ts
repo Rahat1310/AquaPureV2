@@ -58,11 +58,13 @@ async function checkStock(
   productId: string,
   variantId: string | null | undefined,
 ): Promise<number> {
+  console.time("[TIMING] checkStock");
   if (variantId) {
     const variant = await prisma.productVariant.findUnique({
       where: { id: variantId },
       select: { stock: true, product: { select: { status: true } } },
     });
+    console.timeEnd("[TIMING] checkStock");
     if (!variant || variant.product.status !== "ACTIVE") return 0;
     return variant.stock;
   }
@@ -71,6 +73,7 @@ async function checkStock(
     where: { id: productId },
     select: { stock: true, status: true },
   });
+  console.timeEnd("[TIMING] checkStock");
   if (!product || product.status !== "ACTIVE") return 0;
   return product.stock;
 }
@@ -86,8 +89,10 @@ function lineKey(productId: string, variantId?: string | null) {
 export async function addToCart(
   input: unknown,
 ): Promise<CartActionResult> {
+  console.time("[TIMING] addToCart total");
   const parsed = addToCartSchema.safeParse(input);
   if (!parsed.success) {
+    console.timeEnd("[TIMING] addToCart total");
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
@@ -96,42 +101,60 @@ export async function addToCart(
   // Server-side stock check
   const available = await checkStock(productId, variantId);
   if (available < 1) {
+    console.timeEnd("[TIMING] addToCart total");
     return { ok: false, error: "This item is out of stock." };
   }
 
+  console.time("[TIMING] auth check");
   const session = await auth();
+  console.timeEnd("[TIMING] auth check");
 
   if (session?.user?.id) {
     // ── Logged-in: write to DB ─────────────────────────────────────────────
     const userId = session.user.id;
 
+    console.time("[TIMING] findFirst cartItem");
     const existing = await prisma.cartItem.findFirst({
       where: { userId, productId, variantId: variantId ?? null },
     });
+    console.timeEnd("[TIMING] findFirst cartItem");
 
     const newQty = Math.min((existing?.qty ?? 0) + qty, available);
 
     if (existing) {
+      console.time("[TIMING] update cartItem");
       await prisma.cartItem.update({
         where: { id: existing.id },
         data: { qty: newQty },
       });
+      console.timeEnd("[TIMING] update cartItem");
     } else {
+      console.time("[TIMING] create cartItem");
       await prisma.cartItem.create({
         data: { userId, productId, variantId: variantId ?? null, qty: newQty },
       });
+      console.timeEnd("[TIMING] create cartItem");
     }
 
+    console.time("[TIMING] aggregate cartItem totalQty");
     const totalQty = await prisma.cartItem.aggregate({
       where: { userId },
       _sum: { qty: true },
     });
+    console.timeEnd("[TIMING] aggregate cartItem totalQty");
 
+    console.time("[TIMING] revalidatePath");
     revalidatePath("/", "layout");
+    console.timeEnd("[TIMING] revalidatePath");
+
+    console.timeEnd("[TIMING] addToCart total");
     return { ok: true, totalQty: totalQty._sum.qty ?? 0 };
   } else {
     // ── Guest: write to cookie ─────────────────────────────────────────────
+    console.time("[TIMING] readGuestCart");
     const items = await readGuestCart();
+    console.timeEnd("[TIMING] readGuestCart");
+
     const key = lineKey(productId, variantId);
     const idx = items.findIndex((i) => lineKey(i.productId, i.variantId) === key);
 
@@ -141,9 +164,17 @@ export async function addToCart(
       items.push({ productId, variantId: variantId ?? null, qty });
     }
 
+    console.time("[TIMING] writeGuestCart");
     await writeGuestCart(items);
+    console.timeEnd("[TIMING] writeGuestCart");
+
     const totalQty = items.reduce((s, i) => s + i.qty, 0);
+
+    console.time("[TIMING] revalidatePath");
     revalidatePath("/", "layout");
+    console.timeEnd("[TIMING] revalidatePath");
+
+    console.timeEnd("[TIMING] addToCart total");
     return { ok: true, totalQty };
   }
 }
