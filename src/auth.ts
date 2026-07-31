@@ -108,10 +108,7 @@ export async function auth(): Promise<AppSession | null> {
   const { userId } = await clerkAuth();
   if (!userId) return null;
 
-  const clerkUser = await currentUser();
-  if (!clerkUser) return null;
-
-  // Fast path: existing row
+  // Fast path: existing row — no Clerk API call needed for known users.
   const existing = await prisma.user.findUnique({
     where: { clerkId: userId },
     select: { id: true, email: true, name: true, image: true, isActive: true },
@@ -130,7 +127,11 @@ export async function auth(): Promise<AppSession | null> {
     };
   }
 
-  // First login / webhook race: create or attach the row now (prevents loop)
+  // First login / webhook race: Prisma row not yet created.
+  // Only now do we call currentUser() to fetch profile data from Clerk API.
+  const clerkUser = await currentUser();
+  if (!clerkUser) return null;
+
   const email = primaryEmail(clerkUser);
   const name =
     [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") ||
